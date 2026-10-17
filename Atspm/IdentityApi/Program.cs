@@ -21,7 +21,6 @@ using Identity.Business.Claims;
 using Identity.Business.Tokens;
 using Identity.Business.Users;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Utah.Udot.Atspm.Data;
@@ -54,15 +53,7 @@ builder.Host
             o.AddAtspmSecurityDefinitions();
         });
         s.AddConfiguredCors(builder.Configuration);
-        s.AddHttpLogging(l =>
-        {
-            l.LoggingFields = HttpLoggingFields.All;
-            //l.RequestHeaders.Add("My-Request-Header");
-            //l.ResponseHeaders.Add("My-Response-Header");
-            //l.MediaTypeOptions.AddText("application/json");
-            l.RequestBodyLogLimit = 4096;
-            l.ResponseBodyLogLimit = 4096;
-        });
+        s.AddAtspmHttpLogging();
         s.AddAtspmDbContext(h);
         s.AddIdentity<ApplicationUser, IdentityRole>()
         .AddEntityFrameworkStores<IdentityContext>()
