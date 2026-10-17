@@ -82,4 +82,4 @@ host =>
 
 // Build and invoke the command parser
 var cmdParser = cmdBuilder.Build();
-await cmdParser.InvokeAsync(args);
+return await cmdParser.InvokeAsync(args);

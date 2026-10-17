@@ -77,6 +77,8 @@ dkms.conf
 
 # Local configuration files
 .claude/
+Atspm/.env
+Atspm/nginx/certs/
 **/Properties/launchSettings.json
 appsettings.Development.json
 appsettings.Local.json

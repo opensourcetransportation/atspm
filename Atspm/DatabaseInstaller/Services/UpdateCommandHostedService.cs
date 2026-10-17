@@ -25,6 +25,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Utah.Udot.Atspm.Data;
 using Utah.Udot.Atspm.Data.Models.IdentityModels;
+using Utah.Udot.Atspm.Infrastructure.Extensions;
 
 
 namespace DatabaseInstaller.Services
@@ -55,6 +56,11 @@ namespace DatabaseInstaller.Services
                 // Apply migrations
                 await ApplyMigrationsForAllContexts(cancellationToken);
 
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    await scope.ServiceProvider.SeedIdentityData();
+                }
+
                 // Optionally seed admin
                 if (_config.SeedAdmin)
                 {
@@ -65,7 +71,8 @@ namespace DatabaseInstaller.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Exception during migration or seeding: {Exception}", ex);
+                _logger.LogError(ex, "Database migration or seeding failed.");
+                throw;
             }
             finally
             {
@@ -313,9 +320,8 @@ namespace DatabaseInstaller.Services
                 var createResult = await userManager.CreateAsync(adminUser, _config.AdminPassword);
                 if (!createResult.Succeeded)
                 {
-                    _logger.LogError("Failed to create admin user: {Errors}",
+                    throw new InvalidOperationException("Failed to create admin user: " +
                         string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                    return;
                 }
 
                 _logger.LogInformation("Admin user created successfully.");
@@ -331,9 +337,8 @@ namespace DatabaseInstaller.Services
                 var roleResult = await userManager.AddToRoleAsync(adminUser, _config.AdminRole);
                 if (!roleResult.Succeeded)
                 {
-                    _logger.LogError("Failed to assign admin role: {Errors}",
+                    throw new InvalidOperationException("Failed to assign admin role: " +
                         string.Join(", ", roleResult.Errors.Select(e => e.Description)));
-                    return;
                 }
                 _logger.LogInformation("Admin user assigned to Admin role successfully.");
             }
