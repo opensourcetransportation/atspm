@@ -2,6 +2,34 @@
 
 `DatabaseInstaller` is a command-line utility for applying database migrations, moving event log data, copying configuration data, and seeding test records.
 
+## Verifying database migrations
+
+Run the provider script checks without a database:
+
+```bash
+dotnet test ../DatabaseInstallerTests/DatabaseInstallerTests.csproj --filter FullyQualifiedName~ProviderMigrationScriptTests
+```
+
+These checks discover the migrations for all four contexts on PostgreSQL and SQL Server, generate forward scripts, and check SQL Server-specific type and computed-column expressions. They do not execute SQL against a server.
+
+To test PostgreSQL migrations on a disposable database server, set `ATSPM_MIGRATION_TEST_POSTGRES` to an administrator connection string for that server, then run:
+
+```bash
+dotnet test ../DatabaseInstallerTests/DatabaseInstallerTests.csproj --filter FullyQualifiedName~PostgreSqlMigrationIntegrationTests
+```
+
+The integration test creates four uniquely named databases, migrates each context twice, checks that no migrations remain pending, and drops those databases. The connection must allow database creation and deletion. Without the environment variable, this opt-in test does no database work. Use an isolated test server; do not point it at production.
+
+For SQL Server, set `ATSPM_MIGRATION_TEST_SQLSERVER` to an administrator connection string for an isolated SQL Server instance and run:
+
+```bash
+dotnet test ../DatabaseInstallerTests/DatabaseInstallerTests.csproj --filter FullyQualifiedName~SqlServerMigrationIntegrationTests
+```
+
+This test also creates and drops four uniquely named databases. It migrates Config first to `5_2_1`, inserts a synthetic usage row, then upgrades to the current schema and checks that the row survives with a `datetimeoffset` timestamp. It verifies the computed timing-plan validity column for both true and false cases. The test does no database work when the environment variable is unset.
+
+The SQL Server Config migration `20260318134420_5_1_4` now declares `UsageEntries.Timestamp` as `datetime2` until the later `20260521170321_5_3` migration changes it to `datetimeoffset`. The SQL Server Aggregation migration uses a `bit`-valued `CASE` expression for `SignalTimingPlans.Valid`. These repairs do not add a migration or delete history records. An existing database that has already recorded those migrations is not replayed by EF Core. If a database was manually repaired and its intermediate column type differs, inspect its actual schema and back it up before applying further upgrades. The live test covers a fresh installation and one synthetic Config upgrade; upgrades from actual prior-release snapshots and rollback with existing agency rows still need rehearsal against a disposable copy before production use.
+
 ## Running The Tool
 
 Run commands from the `DatabaseInstaller` project root:

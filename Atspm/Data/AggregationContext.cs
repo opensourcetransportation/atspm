@@ -161,6 +161,10 @@ namespace Utah.Udot.Atspm.Data
                 {
                     property.HasComputedColumnSql("\"End\" > \"Start\"");
                 }
+                else if (this.Database.IsSqlServer())
+                {
+                    property.HasComputedColumnSql("CONVERT(bit, CASE WHEN [End] > [Start] THEN 1 ELSE 0 END)");
+                }
                 else
                 {
                     property.HasComputedColumnSql("[End] > [Start]");

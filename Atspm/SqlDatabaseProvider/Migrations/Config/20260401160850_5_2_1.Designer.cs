@@ -2487,7 +2487,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("TraceId")
                         .HasMaxLength(100)
