@@ -108,10 +108,10 @@ namespace ConfigApiTests.ReportServices
             var end = new DateTime(2025, 9, 1).AddHours(3);
             var rawData = new List<RawDataPoint>
             {
-                new RawDataPoint { TimeStamp = start, PedestrianCount = 10 },
-                new RawDataPoint { TimeStamp = start.AddHours(1), PedestrianCount = 20 },
-                new RawDataPoint { TimeStamp = start.AddHours(2), PedestrianCount = 30 },
-                new RawDataPoint { TimeStamp = start.AddHours(3), PedestrianCount = 40 }
+                new RawDataPoint { Timestamp = start, PedestrianCount = 10 },
+                new RawDataPoint { Timestamp = start.AddHours(1), PedestrianCount = 20 },
+                new RawDataPoint { Timestamp = start.AddHours(2), PedestrianCount = 30 },
+                new RawDataPoint { Timestamp = start.AddHours(3), PedestrianCount = 40 }
             };
 
             // Act
@@ -321,9 +321,9 @@ namespace ConfigApiTests.ReportServices
             var end = DateTime.Today.AddHours(2);
             var rawData = new List<RawDataPoint>
         {
-            new RawDataPoint { TimeStamp = start, PedestrianCount = null },
-            new RawDataPoint { TimeStamp = start.AddHours(1), PedestrianCount = 10 },
-            new RawDataPoint { TimeStamp = start.AddHours(2), PedestrianCount = null }
+            new RawDataPoint { Timestamp = start, PedestrianCount = null },
+            new RawDataPoint { Timestamp = start.AddHours(1), PedestrianCount = 10 },
+            new RawDataPoint { Timestamp = start.AddHours(2), PedestrianCount = null }
         };
 
             var stats = _service.CalculateStatistics(rawData, start, end, TimeSpan.FromHours(1));
@@ -408,7 +408,7 @@ namespace ConfigApiTests.ReportServices
 
             // Assert: raw data
             Assert.AreEqual(1, data.RawData.Count, "Only one hourly bucket expected");
-            Assert.AreEqual(start, data.RawData.First().TimeStamp);
+            Assert.AreEqual(start, data.RawData.First().Timestamp);
             Assert.AreEqual(data.TotalVolume, data.RawData.First().PedestrianCount, "RawData pedestrian count should match total volume");
 
             // Assert: statistics
@@ -502,7 +502,7 @@ namespace ConfigApiTests.ReportServices
             // Check raw data only contains phase 1 results
             Assert.AreEqual(1, data.RawData.Count, "Only Phase 1 should be included in RawData");
             var raw = data.RawData.First();
-            Assert.AreEqual(start, raw.TimeStamp, "Phase 1 timestamp expected");
+            Assert.AreEqual(start, raw.Timestamp, "Phase 1 timestamp expected");
 
             // Make sure Phase 2 did not sneak in
             Assert.AreEqual(data.TotalVolume, raw.PedestrianCount, "TotalVolume should equal Phase 1 pedestrian count");
