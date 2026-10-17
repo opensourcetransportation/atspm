@@ -15,7 +15,7 @@
 // limitations under the License.
 #endregion
 
-using Identity.Business.Agency;
+using Identity.Business.Accounts;
 using Identity.Controllers;
 using Identity.Models.Account;
 using Microsoft.AspNetCore.Http;
@@ -25,8 +25,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Moq;
 using System.Security.Claims;
+using System.Net.Mail;
 using Utah.Udot.Atspm.Data.Models.IdentityModels;
 using Utah.Udot.Atspm.Infrastructure.Configuration;
+using Utah.Udot.NetStandardToolkit.Services;
 using Xunit;
 
 namespace Utah.Udot.Atspm.IdentityTests.Controllers
@@ -36,6 +38,8 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
         private readonly AccountController _accountController;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
+        private readonly Mock<IAccountService> _accountServiceMock;
+        private readonly Mock<IEmailService> _emailServiceMock;
 
         public AccountControllerTests()
         {
@@ -44,7 +48,8 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
 
             _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object, Mock.Of<IHttpContextAccessor>(), Mock.Of<IUserClaimsPrincipalFactory<ApplicationUser>>(), null, null, null, null);
 
-            var agencyServiceMock = new Mock<IAgencyService>();
+            _accountServiceMock = new Mock<IAccountService>();
+            _emailServiceMock = new Mock<IEmailService>();
             var configurationMock = new Mock<IConfiguration>();
 
             // Setup the configuration to return specific values for keys
@@ -52,15 +57,12 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
             // Add more configuration values if needed
             // configurationMock.Setup(x => x["IdentityServer:Endpoint"]).Returns("...");
 
-            // Mock any new services or dependencies you've added to the AccountController
-            // var newServiceMock = new Mock<INewService>();
-
-            // Consider using a mock HTTP _client if you're making external HTTP requests
-            // var httpClientMock = new Mock<IHttpClientFactory>();
-            //var serviceMock = new AccountService(_userManagerMock.Object, agencyServiceMock.Object, _signInManagerMock.Object);
-
-            // Use the configurationMock.Object in your controller tests and any new mocks
-            //_accountController = new AccountController(_userManagerMock.Object, _signInManagerMock.Object, configurationMock.Object, serviceMock /*, newServiceMock.Object, httpClientMock.Object*/);
+            _accountController = new AccountController(
+                _userManagerMock.Object,
+                _signInManagerMock.Object,
+                _accountServiceMock.Object,
+                _emailServiceMock.Object,
+                configurationMock.Object);
         }
 
 
@@ -82,11 +84,17 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
             _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync(user); // Return the same user as GetUserAsync
 
+            _accountServiceMock.Setup(service => service.CreateUser(It.IsAny<ApplicationUser>(), model.Password))
+                .ReturnsAsync(new AccountResult(StatusCodes.Status200OK, "token", new List<string>(), null));
+
             // Act
             var result = await _accountController.Register(model);
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
+            _accountServiceMock.Verify(service => service.CreateUser(
+                It.Is<ApplicationUser>(created => created.Email == model.Email && created.Agency == model.Agency),
+                model.Password), Times.Once);
         }
 
         [Fact]
@@ -117,6 +125,9 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
             _signInManagerMock.Setup(sm => sm.PasswordSignInAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
 
+            _accountServiceMock.Setup(service => service.Login(model.Email, model.Password, model.RememberMe))
+                .ReturnsAsync(new AccountResult(StatusCodes.Status200OK, "token", new List<string>(), null));
+
             // Set up the mock UserManager to return a valid user when GetUserAsync is called
             var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Agency = "Avenue" };
             _userManagerMock.Setup(um => um.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
@@ -143,6 +154,7 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
+            _accountServiceMock.Verify(service => service.Login(model.Email, model.Password, model.RememberMe), Times.Once);
         }
 
         [Fact]
@@ -150,6 +162,7 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
         {
             // Arrange
             var model = new LoginViewModel(); // Invalid model without required properties
+            _accountController.ModelState.AddModelError(nameof(model.Email), "Email is required");
 
             // Act
             var result = await _accountController.Login(model);
@@ -161,11 +174,13 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
         [Fact]
         public async Task Logout_ReturnsOk()
         {
+            _signInManagerMock.Setup(manager => manager.SignOutAsync()).Returns(Task.CompletedTask);
             // Act
             var result = await _accountController.Logout();
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
+            _signInManagerMock.Verify(manager => manager.SignOutAsync(), Times.Once);
         }
 
         //[Fact]
@@ -199,6 +214,7 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
         {
             // Arrange
             var model = new ChangePasswordViewModel(); // Invalid model without required properties
+            _accountController.ModelState.AddModelError(nameof(model.NewPassword), "Password is required");
 
             // Act
             var result = await _accountController.ChangePassword(model);
@@ -216,7 +232,7 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
                 Email = "test@example.com"
             };
 
-            var user = new ApplicationUser();
+            var user = new ApplicationUser { UserName = model.Email };
 
             _userManagerMock.Setup(um => um.FindByEmailAsync(model.Email))
                 .ReturnsAsync(user);
@@ -227,11 +243,18 @@ namespace Utah.Udot.Atspm.IdentityTests.Controllers
             _userManagerMock.Setup(um => um.GeneratePasswordResetTokenAsync(user))
                 .ReturnsAsync("reset-token");
 
+            _emailServiceMock.Setup(service => service.SendEmailAsync(It.IsAny<MailMessage>()))
+                .ReturnsAsync(true);
+
             // Act
-            var result = await _accountController.ForgotPassword(Mock.Of<IOptions<IdentityConfiguration>>(), model);
+            var result = await _accountController.ForgotPassword(Options.Create(new IdentityConfiguration
+            {
+                Website = "https://example.com",
+                DefaultEmailAddress = "noreply@example.com"
+            }), model);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<OkResult>(result);
         }
 
         [Fact]
