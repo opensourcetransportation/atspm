@@ -265,6 +265,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest
 
             foreach (var plan in plans)
             {
+                var inactivePhases = new HashSet<TransitSignalPhase>();
                 foreach (var phase in plan.Phases)
                 {
 
@@ -284,6 +285,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest
                         phase.MaxExtension = 0;
                         phase.PriorityMin = 0;
                         phase.PriorityMax = 0;
+                        inactivePhases.Add(phase);
                         continue;
                     }
                     //Max extension is only on designated phases, and will not have a max reduction
@@ -365,6 +367,8 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest
 
                 foreach (var phase in plan.Phases)
                 {
+                    if (inactivePhases.Contains(phase))
+                        continue;
                     if (parameters.LocationPhases.DesignatedPhases.Contains(phase.PhaseNumber))
                     {
                         var matchingPhase = GetMatchingPhase(phase.PhaseNumber);
@@ -395,6 +399,9 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest
                 //3. Set the priority min and max to the programmed split +/- the max extension
                 foreach (var phase in plan.Phases)
                 {
+                    // Keep the zero limits established above for inactive or invalid phases.
+                    if (inactivePhases.Contains(phase))
+                        continue;
                     phase.PriorityMin = Convert.ToInt32(Math.Round(phase.ProgrammedSplit)) - phase.MaxReduction;
                     phase.PriorityMax = Convert.ToInt32(Math.Round(phase.ProgrammedSplit)) + phase.MaxExtension;
                 }
