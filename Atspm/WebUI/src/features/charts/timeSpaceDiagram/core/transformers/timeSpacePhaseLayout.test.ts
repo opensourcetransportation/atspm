@@ -57,6 +57,20 @@ function buildRows() {
 }
 
 describe('buildTimeSpacePhaseLayout distance spacing modes', () => {
+  it.each(['distance', 'sequence', 'hybrid'] as const)(
+    'preserves signed offsets for a single location in %s mode',
+    (distanceSpacingMode) => {
+      const layout = buildTimeSpacePhaseLayout(
+        [buildRow(0, 'Primary', 100), buildRow(0, 'Opposing', 100)],
+        { distanceSpacingMode }
+      )
+
+      expect(layout.getDisplayDistanceOffset(0, -100)).toBe(-100)
+      expect(layout.getDisplayDistanceOffset(0, 0)).toBe(0)
+      expect(layout.getDisplayDistanceOffset(0, 100)).toBe(100)
+    }
+  )
+
   it('uses actual scaled route distances in distance-based mode', () => {
     const layout = buildTimeSpacePhaseLayout(buildRows(), {
       distanceSpacingMode: 'distance',
