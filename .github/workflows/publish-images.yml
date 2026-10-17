@@ -24,6 +24,7 @@ jobs:
           - atspm-report-api
           - atspm-watchdog
           - atspm-eventlogutil
+          - atspm-database-installer
 
     steps:
       - name: Checkout
