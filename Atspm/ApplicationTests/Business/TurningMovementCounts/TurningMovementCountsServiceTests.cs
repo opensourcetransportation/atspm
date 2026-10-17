@@ -55,7 +55,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
         [InlineData(15)]
         [InlineData(30)]
         [InlineData(60)]
-        public async Task LaneCountsAreIndependentOfBinSizeAndActivations(int binSize)
+        public async Task DetectorCountsAreIndependentOfBinSizeAndUnknownLanesArePreserved(int binSize)
         {
             var detectors = new List<Detector> { Detector(1, null), Detector(2, 1), Detector(3, null), Detector(4, 2) };
             var events = new List<IndianaEvent>
@@ -67,17 +67,44 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
 
             Assert.Equal(4, result.DetectorCount);
             Assert.Equal(4, result.TotalVolume);
-            Assert.Equal(2, result.Lanes.Count);
+            Assert.Equal(3, result.Lanes.Count);
+            var unknownLane = result.Lanes.Single(l => l.LaneNumber == null);
             var laneOne = result.Lanes.Single(l => l.LaneNumber == 1);
             var laneTwo = result.Lanes.Single(l => l.LaneNumber == 2);
-            Assert.Equal(3, laneOne.DetectorCount);
+            Assert.Equal(2, unknownLane.DetectorCount);
+            Assert.Equal(1, laneOne.DetectorCount);
             Assert.Equal(1, laneTwo.DetectorCount);
-            Assert.Equal(3 * (60 / binSize), laneOne.Volume.Sum(v => v.Value));
+            Assert.Equal(2 * (60 / binSize), unknownLane.Volume.Sum(v => v.Value));
+            Assert.Equal(60 / binSize, laneOne.Volume.Sum(v => v.Value));
             Assert.Equal(60 / binSize, laneTwo.Volume.Sum(v => v.Value));
             Assert.Equal(60 / binSize, result.TotalVolumes.Count);
-            Assert.Equal(1.0 / 3, result.LaneUtilizationFactor);
+            Assert.Null(result.LaneUtilizationFactor);
             for (var i = 0; i < result.TotalVolumes.Count; i++)
                 Assert.Equal(result.TotalVolumes[i].Value * (60 / binSize), result.Lanes.Sum(l => l.Volume[i].Value));
+        }
+
+        [Fact]
+        public async Task KnownLanesUseLaneVolumesForUtilizationAndCountEachChannelOnce()
+        {
+            var result = await Calculate(new List<Detector> { Detector(1, 1), Detector(2, 1), Detector(3, 2) },
+                new List<IndianaEvent> { Event(1, Start), Event(1, Start.AddMinutes(1)), Event(2, Start), Event(3, Start) });
+            Assert.Equal(3, result.DetectorCount);
+            Assert.Equal(2, result.Lanes.Single(l => l.LaneNumber == 1).DetectorCount);
+            Assert.Equal(1, result.Lanes.Single(l => l.LaneNumber == 2).DetectorCount);
+            Assert.Equal(4.0 / (2 * 3), result.LaneUtilizationFactor);
+        }
+
+        [Fact]
+        public async Task DuplicateChannelAssignmentsDoNotDuplicateCountsOrInventALane()
+        {
+            var result = await Calculate(new List<Detector> { Detector(1, 1), Detector(1, 2) },
+                new List<IndianaEvent> { Event(1, Start) });
+            Assert.Equal(1, result.DetectorCount);
+            Assert.Equal(1, result.TotalVolume);
+            var lane = Assert.Single(result.Lanes);
+            Assert.Null(lane.LaneNumber);
+            Assert.Equal(1, lane.DetectorCount);
+            Assert.Null(result.LaneUtilizationFactor);
         }
 
         [Fact]
@@ -89,7 +116,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
                 Event(1, Start.AddMinutes(15)), Event(2, Start.AddMinutes(30)), Event(1, Start.AddHours(1).AddTicks(-1)),
                 Event(2, Start.AddHours(1)), Event(99, Start.AddMinutes(1)), Event(1, Start.AddMinutes(1), 81)
             };
-            var result = await Calculate(new List<Detector> { Detector(1, null), Detector(2, 1) }, events);
+            var result = await Calculate(new List<Detector> { Detector(1, 1), Detector(2, 1) }, events);
 
             Assert.Equal(2, result.DetectorCount);
             Assert.Equal(5, result.TotalVolume);
@@ -102,11 +129,11 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
         [InlineData(0)]
         [InlineData(2)]
         [InlineData(7)]
-        public async Task ExplicitLaneNumbersArePreservedAndOnlyNullDefaultsToOne(int explicitLane)
+        public async Task ExplicitAndUnknownLaneNumbersArePreserved(int explicitLane)
         {
             var detectors = new List<Detector> { Detector(1, null), Detector(2, explicitLane) };
             var result = await Calculate(detectors, new List<IndianaEvent> { Event(1, Start), Event(2, Start) });
-            Assert.Equal(new[] { 1, explicitLane }.OrderBy(n => n), result.Lanes.Select(l => l.LaneNumber.Value).OrderBy(n => n));
+            Assert.Equal(new int?[] { null, explicitLane }, result.Lanes.Select(l => l.LaneNumber).OrderBy(n => n));
             Assert.All(result.Lanes, l => Assert.Equal(1, l.DetectorCount));
             Assert.Null(detectors[0].LaneNumber);
             Assert.Equal(explicitLane, detectors[1].LaneNumber);
@@ -119,7 +146,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
                 new List<IndianaEvent> { Event(99, Start) });
             Assert.Equal(2, result.DetectorCount);
             Assert.Equal(2, Assert.Single(result.Lanes).DetectorCount);
-            Assert.Equal(1, result.Lanes[0].LaneNumber);
+            Assert.Null(result.Lanes[0].LaneNumber);
             Assert.Equal(0, result.TotalVolume);
             Assert.All(result.TotalVolumes, v => Assert.Equal(0, v.Value));
             Assert.Null(result.LaneUtilizationFactor);
@@ -127,9 +154,16 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
         }
 
         [Fact]
-        public async Task EmptyEventListPreservesExistingNoResultBehavior()
+        public async Task EmptyEventListReturnsZeroFilledVolumesAndDetectorMetadata()
         {
-            Assert.Null(await Calculate(new List<Detector> { Detector(1, null) }, new List<IndianaEvent>()));
+            var result = await Calculate(new List<Detector> { Detector(1, null) }, new List<IndianaEvent>());
+            Assert.Equal(1, result.DetectorCount);
+            Assert.Equal(1, Assert.Single(result.Lanes).DetectorCount);
+            Assert.Equal(0, result.TotalVolume);
+            Assert.Equal(4, result.TotalVolumes.Count);
+            Assert.All(result.TotalVolumes, point => Assert.Equal(0, point.Value));
+            Assert.Null(result.LaneUtilizationFactor);
+            Assert.Null(result.PeakHourFactor);
         }
 
         [Fact]
@@ -143,7 +177,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
         [InlineData(null)]
         [InlineData(1)]
         [InlineData(2)]
-        public async Task MissingLaneNumbersDefaultToOneAndCountDetectorsWithinEachLaneGroup(int? secondLane)
+        public async Task MissingLaneNumbersStayUnknownAndCountsReflectEachChannelGroup(int? secondLane)
         {
             var start = new DateTime(2026, 9, 8, 8, 0, 0);
             var detectors = new List<Detector>
@@ -169,17 +203,16 @@ namespace Utah.Udot.Atspm.ApplicationTests.Business.TurningMovementCounts
             Assert.NotNull(result);
             Assert.Equal(3, result.DetectorCount);
             Assert.Equal(3, result.TotalVolume);
-            Assert.Equal(secondLane == 2 ? 2 : 1, result.Lanes.Count);
+            Assert.Equal(secondLane == 2 ? 3 : 2, result.Lanes.Count);
             Assert.Contains(result.Lanes, lane => lane.LaneNumber == 1);
-            Assert.All(result.Lanes, lane => Assert.NotNull(lane.LaneNumber));
+            Assert.Contains(result.Lanes, lane => lane.LaneNumber == null);
             Assert.All(result.Lanes, lane => Assert.Equal(4 * lane.DetectorCount, lane.Volume.Sum(point => point.Value)));
-            Assert.Equal(secondLane == 2 ? 0.5 : 1.0 / 3, result.LaneUtilizationFactor);
-            Assert.Equal(secondLane == 2 ? 2 : 3, result.Lanes.Single(lane => lane.LaneNumber == 1).DetectorCount);
+            Assert.Null(result.LaneUtilizationFactor);
+            Assert.Equal(secondLane == 1 ? 2 : 1, result.Lanes.Single(lane => lane.LaneNumber == 1).DetectorCount);
+            Assert.Equal(secondLane == null ? 2 : 1, result.Lanes.Single(lane => lane.LaneNumber == null).DetectorCount);
             Assert.Null(detectors[0].LaneNumber);
             if (secondLane == 2)
                 Assert.Equal(1, result.Lanes.Single(lane => lane.LaneNumber == 2).DetectorCount);
-            else
-                Assert.All(result.Lanes, lane => Assert.Equal(1, lane.LaneNumber));
         }
     }
 }

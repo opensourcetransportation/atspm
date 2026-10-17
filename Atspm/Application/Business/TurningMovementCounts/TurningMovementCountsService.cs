@@ -71,11 +71,13 @@ namespace Utah.Udot.Atspm.Business.TurningMovementCounts
             var laneVolumes = channelVolumes.GroupBy(c => c.LaneNumber).Select(group => new
             {
                 LaneNumber = group.Key,
+                DetectorCount = group.Count(),
                 Volume = new VolumeCollection(group.Select(c => c.Volume).ToList(), options.BinSize)
             }).ToList();
             var lanes = laneVolumes.Select(lane => new Lane
             {
                 LaneNumber = lane.LaneNumber,
+                DetectorCount = lane.DetectorCount,
                 MovementType = resolvedMovementTypeLabel,
                 LaneType = laneType,
                 Volume = lane.Volume.Items.Select(i => new DataPointForInt(i.StartTime, i.HourlyVolume)).ToList()
@@ -120,6 +122,7 @@ namespace Utah.Udot.Atspm.Business.TurningMovementCounts
                 statistics.PeakHourFactor,
                 laneUtilizationFactor)
             {
+                DetectorCount = channelVolumes.Count,
                 MinuteVolumes = minuteVolumes
             };
             return Task.FromResult(result);
