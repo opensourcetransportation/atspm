@@ -154,10 +154,15 @@ namespace Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients
         {
             var result = await _client.GetListing(path, FtpListOption.Auto, token);
 
+            if (result.Length == 0)
+                return Enumerable.Empty<Uri>();
+
+            var newestModified = result.Max(item => item.RawModified);
+
             return result
                 .Where(w => w.Type == FtpObjectType.File)
-                .Where(w => query.Any(a => w.Name.Contains(a)))
-                .Where(w => w.RawModified != result.Max(m => m.RawModified))
+                .Where(w => query == null || query.Length == 0 || query.Any(a => w.Name.Contains(a)))
+                .Where(w => w.RawModified != newestModified)
                 .Select(s => new UriBuilder(Uri.UriSchemeFtp, _client.Host, _client.Port, s.FullName).Uri)
                 .ToList();
         }
