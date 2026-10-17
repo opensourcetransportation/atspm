@@ -23,6 +23,7 @@ using System.Linq;
 using Utah.Udot.Atspm.Analysis.Workflows;
 using Utah.Udot.Atspm.ApplicationTests.Analysis.TestObjects;
 using Utah.Udot.Atspm.ApplicationTests.Attributes;
+using Utah.Udot.Atspm.ApplicationTests.Fixtures;
 using Utah.Udot.Atspm.Data.Models;
 using Utah.Udot.Atspm.Data.Models.EventLogModels;
 using Xunit;
@@ -51,7 +52,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.Workflows
         [Fact(Skip = "only run when you need to create test data")]
         public void CreateTestFile()
         {
-            var json = File.ReadAllText(new FileInfo(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\Location7115TestData.json").FullName);
+            var json = TestDataFiles.ReadAllText("Location7115TestData.json");
             var Location = JsonConvert.DeserializeObject<Location>(json);
 
             var test = new AggregateDetectorEventCountTestData()
@@ -65,13 +66,13 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.Workflows
             {
                 TypeNameHandling = TypeNameHandling.All
             });
-            File.WriteAllText(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\DetectorEventCountAggregationTestData1.json", result);
+            File.WriteAllText(Path.Combine(TestDataFiles.DirectoryPath, "DetectorEventCountAggregationTestData1.json"), result);
         }
 
         [Fact(Skip = "only run when you need to create test data")]
         public void GetTestFile()
         {
-            var dir = new DirectoryInfo(Path.Combine(Path.GetFullPath(@"..\..\..\"), "Analysis", "TestData"));
+            var dir = new DirectoryInfo(TestDataFiles.DirectoryPath);
 
             //var testMethod = System.Reflection.MethodInfo.GetCurrentMethod();
 
