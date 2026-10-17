@@ -20,9 +20,11 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 using Utah.Udot.ATSPM.ConfigApi.DTO;
 using Utah.Udot.NetStandardToolkit.Exceptions;
+using Utah.Udot.NetStandardToolkit.Configuration;
 using Utah.Udot.NetStandardToolkit.Services.GitHubReleaseService;
 
 namespace Utah.Udot.Atspm.ConfigApi.Controllers
@@ -42,12 +44,21 @@ namespace Utah.Udot.Atspm.ConfigApi.Controllers
     /// </remarks>
     /// <param name="github">The service responsible for communicating with the GitHub API to fetch release data.</param>
     /// <param name="mapper">The AutoMapper instance used to transform domain models into API-friendly Data Transfer Objects.</param>
+    /// <param name="configuration">The repository configured as the source of release checks.</param>
     [ApiVersion(1.0)]
     [Produces("application/json")]
-    public class VersionController(IGitHubReleaseService github, IMapper mapper) : ODataController
+    public class VersionController(IGitHubReleaseService github, IMapper mapper, IOptions<GitHubReleaseConfiguration> configuration) : ODataController
     {
         private readonly IGitHubReleaseService _github = github;
         private readonly IMapper _mapper = mapper;
+
+        private GitHubReleaseDto MapRelease(GitHubRelease release)
+        {
+            var dto = _mapper.Map<GitHubReleaseDto>(release);
+            var source = configuration.Value;
+            dto.SourceRepositoryUrl = $"https://github.com/{source.RepositoryOwner}/{source.RepositoryName}";
+            return dto;
+        }
 
         /// <summary>
         /// Retrieves the specific release details for the version currently running in this environment.
@@ -86,7 +97,7 @@ namespace Utah.Udot.Atspm.ConfigApi.Controllers
 
                 var release = await _github.GetReleaseByTag(tag);
 
-                return Ok(_mapper.Map<GitHubReleaseDto>(release));
+                return Ok(MapRelease(release));
             }
             catch (GitHubReleaseNotFoundException ex)
             {
@@ -117,7 +128,7 @@ namespace Utah.Udot.Atspm.ConfigApi.Controllers
             try
             {
                 var latest = await _github.GetLatestRelease(PreRelease);
-                return Ok(_mapper.Map<GitHubReleaseDto>(latest));
+                return Ok(MapRelease(latest));
             }
             catch (GitHubApiException ex)
             {
@@ -145,7 +156,7 @@ namespace Utah.Udot.Atspm.ConfigApi.Controllers
             try
             {
                 var history = await _github.GetReleaseHistory(PreRelease);
-                var dtos = _mapper.Map<List<GitHubReleaseDto>>(history);
+                var dtos = history.Select(MapRelease).ToList();
                 return Ok(dtos.AsQueryable());
             }
             catch (GitHubApiException ex)
