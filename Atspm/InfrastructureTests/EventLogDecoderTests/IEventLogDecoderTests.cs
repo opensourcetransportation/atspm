@@ -20,7 +20,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Utah.Udot.Atspm.Data.Models;
 using Utah.Udot.Atspm.Data.Models.EventLogModels;
+using Utah.Udot.Atspm.Infrastructure.Services.EventLogDecoders;
 using Utah.Udot.NetStandardToolkit.Extensions;
 using Xunit;
 using Xunit.Abstractions;
@@ -43,8 +45,6 @@ namespace Utah.Udot.Atspm.InfrastructureTests.EventLogDecoderTests
 
     public class IEventLogDecoderTests : IDisposable
     {
-        private const string TestDataPath = "C:\\Users\\christianbaker\\source\\repos\\udot-atspm\\Atspm\\InfrastructureTests\\EventLogDecoderTests\\TestData";
-
         private readonly ITestOutputHelper _output;
         //private IEventLogDecoder _decoder;
         //private ILogger _nullLogger;
@@ -68,12 +68,23 @@ namespace Utah.Udot.Atspm.InfrastructureTests.EventLogDecoderTests
 
 
         [Fact]
-        public void JustTesting()
+        public void DecodesMaxTimeEventsWithLocationAndTimestamp()
         {
-            var data = File.ReadAllBytes(Path.Combine(TestDataPath, "638548149067839806.xml"));
+            const string xml = """
+                <EventResponses><EventResponse>
+                  <Event ID="1" TimeStamp="2024-06-23T22:47:07" EventTypeID="81" Parameter="41" />
+                  <Event ID="2" TimeStamp="2024-06-23T22:47:12" EventTypeID="82" Parameter="47" />
+                </EventResponse></EventResponses>
+                """;
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            var device = new Device { Location = new Location { LocationIdentifier = "test-location" } };
 
-            _output.WriteLine(Encoding.UTF8.GetString(data.Take(100).ToArray()));
-            _output.WriteLine(BitConverter.ToString(data.Take(100).ToArray()));
+            var events = new MaxtimeToIndianaDecoder().Decode(device, stream).ToList();
+
+            Assert.Equal(2, events.Count);
+            Assert.All(events, e => Assert.Equal("test-location", e.LocationIdentifier));
+            Assert.Contains(events, e => e.EventCode == 81 && e.EventParam == 41 && e.Timestamp == new DateTime(2024, 6, 23, 22, 47, 7));
+            Assert.Contains(events, e => e.EventCode == 82 && e.EventParam == 47 && e.Timestamp == new DateTime(2024, 6, 23, 22, 47, 12));
 
             //var file = new FileInfo(Path.Combine(TestDataPath, "638548149067839806.xml"));
             //var device = new Device()
