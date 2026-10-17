@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using Utah.Udot.Atspm.Data.Enums;
 using Utah.Udot.Atspm.Infrastructure.Configuration;
+using Utah.Udot.Atspm.Infrastructure.Services.DeviceDownloaders;
 using Utah.Udot.Atspm.Services;
 using Xunit.Sdk;
 
@@ -40,7 +41,9 @@ namespace Utah.Udot.Atspm.InfrastructureTests.Attributes
                 clients.Add(Mock.Of<IDownloaderClient>(a => a.Protocol == (TransportProtocols)i, MockBehavior.Strict));
             }
 
-            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(m => m.GetTypes().Where(w => w.GetInterfaces().Contains(typeof(IDeviceDownloader)))).ToList();
+            var types = typeof(DeviceDownloader).Assembly.GetTypes()
+                .Where(t => typeof(IDeviceDownloader).IsAssignableFrom(t) && !t.IsAbstract)
+                .ToList();
             foreach (var t in types)
             {
                 yield return new object[] { t, clients, new NullLogger<IDeviceDownloader>(), Mock.Of<IOptionsSnapshot<DeviceDownloaderConfiguration>>() };
