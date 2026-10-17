@@ -19,6 +19,8 @@ import {
 } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
+import compareVersions from 'semver/functions/compare'
+import parseVersion from 'semver/functions/parse'
 
 type Partner = {
   path: string
@@ -178,8 +180,24 @@ const partnerSections: PartnerSection[] = [
 const getReleaseLabel = (release?: GitHubReleaseDto) =>
   release?.tagName || release?.name || 'Unknown'
 
-const normalizeReleaseLabel = (release?: GitHubReleaseDto) =>
-  getReleaseLabel(release).trim().replace(/^v/i, '').toLowerCase()
+const parseReleaseVersion = (release?: GitHubReleaseDto) =>
+  parseVersion(getReleaseLabel(release).trim().replace(/^v/i, ''))
+
+const getReleaseSource = (release?: GitHubReleaseDto) => {
+  try {
+    const url = new URL(release?.sourceRepositoryUrl || release?.htmlUrl || '')
+    const match = url.pathname.match(
+      /^\/([\w.-]+)\/([\w.-]+)(?:\/releases(?:\/.*)?|\/)?$/
+    )
+    if (url.protocol !== 'https:' || url.hostname !== 'github.com' || !match) {
+      return null
+    }
+    const name = `${match[1]}/${match[2]}`
+    return { name, url: `https://github.com/${name}` }
+  } catch {
+    return null
+  }
+}
 
 const VersionMetric = ({ label, value }: { label: string; value: string }) => (
   <Box>
@@ -199,6 +217,10 @@ const VersionStatus = ({
   currentVersionLabel,
   latestVersionLabel,
   hasNewerVersion,
+  isAheadOfStable,
+  isComparisonUnavailable,
+  isInstalledPrerelease,
+  releaseSource,
   isVersionLoading,
   isVersionUnavailable,
   releaseUrl,
@@ -206,6 +228,10 @@ const VersionStatus = ({
   currentVersionLabel: string
   latestVersionLabel: string
   hasNewerVersion: boolean
+  isAheadOfStable: boolean
+  isComparisonUnavailable: boolean
+  isInstalledPrerelease: boolean
+  releaseSource: ReturnType<typeof getReleaseSource>
   isVersionLoading: boolean
   isVersionUnavailable: boolean
   releaseUrl?: string | null
@@ -216,21 +242,31 @@ const VersionStatus = ({
       ? 'error'
       : hasNewerVersion
         ? 'warning'
-        : 'success'
+        : isComparisonUnavailable || isAheadOfStable
+          ? 'info'
+          : 'success'
   const versionTitle = isVersionLoading
     ? 'Checking version status'
     : isVersionUnavailable
       ? 'Version status unavailable'
       : hasNewerVersion
         ? 'Update available'
-        : 'ATSPM is up to date'
+        : isComparisonUnavailable
+          ? 'Version comparison unavailable'
+          : isAheadOfStable
+            ? 'Ahead of latest stable'
+            : 'Matches latest stable'
   const versionMessage = isVersionLoading
-    ? 'Retrieving current and latest ATSPM release information.'
+    ? 'Retrieving installed version and latest stable release information.'
     : isVersionUnavailable
       ? 'One or more version endpoints could not be loaded.'
       : hasNewerVersion
-        ? 'A newer ATSPM release is ready to review.'
-        : 'This installation is using the latest release.'
+        ? 'A stable release newer than the installed version is ready to review.'
+        : isComparisonUnavailable
+          ? 'A valid installed version and stable release are needed to compare versions.'
+          : isAheadOfStable
+            ? 'The installed version is newer than the latest stable release. No downgrade is needed.'
+            : 'The installed version matches the latest stable release.'
 
   return (
     <Box
@@ -267,9 +303,41 @@ const VersionStatus = ({
         spacing={2}
         sx={{ mb: 2 }}
       >
-        <VersionMetric label="Current" value={currentVersionLabel} />
-        <VersionMetric label="Latest" value={latestVersionLabel} />
+        <Box>
+          <VersionMetric
+            label="Installed version"
+            value={currentVersionLabel}
+          />
+          {isInstalledPrerelease && (
+            <Typography variant="caption" color="text.secondary">
+              Prerelease
+            </Typography>
+          )}
+        </Box>
+        <VersionMetric
+          label="Latest stable release"
+          value={latestVersionLabel}
+        />
       </Stack>
+
+      <Typography variant="body2" sx={{ mb: 1 }}>
+        {releaseSource ? (
+          <>
+            Release source:{' '}
+            <Link href={releaseSource.url}>{releaseSource.name}</Link>
+          </>
+        ) : (
+          'Release source unavailable'
+        )}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', mb: 2 }}
+      >
+        Release checks use stable releases from this source. Development builds
+        and forks can include changes beyond their version label.
+      </Typography>
 
       {hasNewerVersion && releaseUrl && (
         <Button
@@ -340,17 +408,13 @@ const About = () => {
     data: latestVersion,
     isLoading: isLatestVersionLoading,
     isError: isLatestVersionError,
-  } = useGetVersionLatestVersionFromPreRelease(
-    false,
-    undefined,
-    {
-      query: {
-        enabled: true,
-        staleTime: 5 * 60 * 1000,
-        retry: 1,
-      },
-    }
-  )
+  } = useGetVersionLatestVersionFromPreRelease(false, undefined, {
+    query: {
+      enabled: true,
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+    },
+  })
 
   const isVersionLoading = isCurrentVersionLoading || isLatestVersionLoading
   const isVersionUnavailable = isCurrentVersionError || isLatestVersionError
@@ -365,14 +429,26 @@ const About = () => {
       ? 'Unavailable'
       : getReleaseLabel(latestVersion)
 
-  const hasNewerVersion = Boolean(
-    !isVersionLoading &&
-      !isVersionUnavailable &&
-      currentVersion &&
-      latestVersion &&
-      normalizeReleaseLabel(currentVersion) !==
-        normalizeReleaseLabel(latestVersion)
-  )
+  const installed = parseReleaseVersion(currentVersion)
+  const stable = parseReleaseVersion(latestVersion)
+  const comparison =
+    installed &&
+    stable &&
+    !stable.prerelease.length &&
+    !latestVersion?.prerelease &&
+    !latestVersion?.draft
+      ? compareVersions(installed, stable)
+      : null
+  const canCompare =
+    !isVersionLoading && !isVersionUnavailable && comparison !== null
+  const hasNewerVersion = canCompare && comparison < 0
+  const releaseSource = getReleaseSource(latestVersion)
+  const releaseUrl = releaseSource
+    ? getReleaseSource({ htmlUrl: latestVersion?.htmlUrl })?.url ===
+      releaseSource.url
+      ? latestVersion?.htmlUrl
+      : `${releaseSource.url}/releases`
+    : undefined
 
   return (
     <ResponsivePageLayout title="About" hideTitle>
@@ -452,9 +528,15 @@ const About = () => {
                 currentVersionLabel={currentVersionLabel}
                 latestVersionLabel={latestVersionLabel}
                 hasNewerVersion={hasNewerVersion}
+                isAheadOfStable={canCompare && comparison > 0}
+                isComparisonUnavailable={comparison === null}
+                isInstalledPrerelease={Boolean(
+                  installed?.prerelease.length || currentVersion?.prerelease
+                )}
+                releaseSource={releaseSource}
                 isVersionLoading={isVersionLoading}
                 isVersionUnavailable={isVersionUnavailable}
-                releaseUrl={latestVersion?.htmlUrl}
+                releaseUrl={releaseUrl}
               />
             </Grid>
           </Grid>

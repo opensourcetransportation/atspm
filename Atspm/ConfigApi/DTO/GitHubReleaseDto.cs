@@ -49,6 +49,11 @@ namespace Utah.Udot.ATSPM.ConfigApi.DTO
         public string HtmlUrl { get; set; }
 
         /// <summary>
+        /// Public GitHub repository configured as the source for release checks.
+        /// </summary>
+        public string SourceRepositoryUrl { get; set; }
+
+        /// <summary>
         /// Indicates whether the release is a draft.
         /// </summary>
         public bool Draft { get; set; }

@@ -594,6 +594,8 @@ export interface GitHubReleaseDto {
    * @nullable
    */
   htmlUrl?: string | null;
+  /** Public GitHub repository configured as the release source. */
+  sourceRepositoryUrl?: string | null;
   /** Indicates whether the release is a draft. */
   draft?: boolean;
   /** Indicates whether the release is marked as a prerelease. */
@@ -687,6 +689,8 @@ export interface GitHubReleaseDto {
    * @nullable
    */
   htmlUrl?: string | null;
+  /** Public GitHub repository configured as the release source. */
+  sourceRepositoryUrl?: string | null;
   /** Indicates whether the release is a draft. */
   draft?: boolean;
   /** Indicates whether the release is marked as a prerelease. */

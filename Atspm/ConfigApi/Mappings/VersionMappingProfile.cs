@@ -36,6 +36,7 @@ namespace Utah.Udot.ATSPM.ConfigApi.Mappings
             CreateMap<GitHubAsset, GitHubAssetDto>();
 
             CreateMap<GitHubRelease, GitHubReleaseDto>()
+                .ForMember(dest => dest.SourceRepositoryUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.Author))
                 .ForMember(dest => dest.Assets, opt => opt.MapFrom(src => src.Assets));
         }
