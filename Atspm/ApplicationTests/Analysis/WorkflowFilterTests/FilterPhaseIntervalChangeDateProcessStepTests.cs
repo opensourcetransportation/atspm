@@ -28,6 +28,7 @@ namespace Utah.Udot.ATSPM.ApplicationTests.Analysis.WorkflowFilterTests
         {
             filteredCodes =
             [
+                (short)IndianaEnumerations.PhaseOn,
                 (short)IndianaEnumerations.PhaseBeginGreen,
                 (short)IndianaEnumerations.PhaseBeginYellowChange,
                 (short)IndianaEnumerations.PhaseEndYellowChange,
