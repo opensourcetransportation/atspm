@@ -19,7 +19,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -31,19 +30,6 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DatabaseInstallerTests;
 
 public class TransferConfigCommandTests
 {
-    private static readonly string DatabaseInstallerAssemblyPath =
-        Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "DatabaseInstaller",
-            "bin",
-            "Debug",
-            "net8.0",
-            "DatabaseInstaller.dll"));
-
     [Fact]
     public void RootCommand_IncludesTransferConfigCommand()
     {
@@ -152,8 +138,7 @@ public class TransferConfigCommandTests
 
     private static Assembly LoadDatabaseInstallerAssembly()
     {
-        Assert.True(File.Exists(DatabaseInstallerAssemblyPath), $"Missing assembly: {DatabaseInstallerAssemblyPath}");
-        return Assembly.LoadFrom(DatabaseInstallerAssemblyPath);
+        return typeof(DatabaseInstaller.Commands.TransferConfigCommand).Assembly;
     }
 
     private static IEnumerable<object> GetEnumerableProperty(object instance, string propertyName)
