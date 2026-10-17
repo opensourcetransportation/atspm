@@ -131,8 +131,8 @@ namespace Utah.Udot.ATSPM.ApplicationTests.Extensions
             Assert.Equal(Location, cycle.LocationIdentifier);
             Assert.Equal(1, cycle.PhaseNumber);
             Assert.Equal(now.AddSeconds(0), cycle.Start);
-            Assert.Equal(now.AddSeconds(1), cycle.GreenEvent);
-            Assert.Equal(now.AddSeconds(2), cycle.YellowEvent);
+            Assert.Equal(now.AddSeconds(1), cycle.GreenInterval.Start);
+            Assert.Equal(now.AddSeconds(2), cycle.YellowInterval.Start);
             Assert.Equal(now.AddSeconds(3), cycle.End);
         }
 
@@ -206,8 +206,8 @@ namespace Utah.Udot.ATSPM.ApplicationTests.Extensions
             Assert.Single(result);
             var cycle = result.First();
             Assert.Equal(now.AddSeconds(0), cycle.Start);
-            Assert.Equal(now.AddSeconds(1), cycle.GreenEvent);
-            Assert.Equal(now.AddSeconds(2), cycle.YellowEvent);
+            Assert.Equal(now.AddSeconds(1), cycle.GreenInterval.Start);
+            Assert.Equal(now.AddSeconds(2), cycle.YellowInterval.Start);
             Assert.Equal(now.AddSeconds(3), cycle.End);
         }
 
