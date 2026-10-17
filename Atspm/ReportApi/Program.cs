@@ -15,7 +15,6 @@
 // limitations under the License.
 #endregion
 
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Reflection;
@@ -84,15 +83,7 @@ builder.Host
 
         });
         s.AddConfiguredCors(builder.Configuration);
-        s.AddHttpLogging(l =>
-        {
-            l.LoggingFields = HttpLoggingFields.All;
-            //l.RequestHeaders.Add("My-Request-Header");
-            //l.ResponseHeaders.Add("My-Response-Header");
-            //l.MediaTypeOptions.AddText("application/json");
-            l.RequestBodyLogLimit = 4096;
-            l.ResponseBodyLogLimit = 4096;
-        });
+        s.AddAtspmHttpLogging();
 
         s.AddAtspmDbContext(h);
         s.AddAtspmEFEventLogRepositories();
