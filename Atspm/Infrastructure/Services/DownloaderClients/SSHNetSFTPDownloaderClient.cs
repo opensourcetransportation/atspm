@@ -93,8 +93,14 @@ namespace Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients
         {
             var result = await _client.ListDirectoryAsync(path, query);
 
-            return result
-                .Where(w => w.LastWriteTime != result.Max(m => m.LastWriteTime))
+            var files = result.ToList();
+            if (files.Count == 0)
+                return Enumerable.Empty<Uri>();
+
+            var newestModified = files.Max(file => file.LastWriteTime);
+
+            return files
+                .Where(w => w.LastWriteTime != newestModified)
                 .Select(s => new UriBuilder(Uri.UriSchemeSftp, _client.ConnectionInfo.Host, _client.ConnectionInfo.Port, s.FullName).Uri).ToList();
         }
 
@@ -157,7 +163,8 @@ namespace Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients
         {
             var result = await Task.Factory.FromAsync(BeginListDirectory(directory, null, null), EndListDirectory);
 
-            return result.Where(w => w.IsRegularFile).Where(w => filters.Any(a => w.FullName.Contains(a)));
+            return result.Where(w => w.IsRegularFile)
+                .Where(w => filters == null || filters.Length == 0 || filters.Any(a => w.FullName.Contains(a)));
         }
     }
 }
