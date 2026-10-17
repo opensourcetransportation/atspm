@@ -20,6 +20,7 @@ using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients;
 using Xunit.Abstractions;
@@ -36,7 +37,12 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         {
             var client = new Mock<ISftpClientWrapper>();
 
-            client.Setup(s => s.Connect()).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.ConnectAsync(It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    client.SetupGet(p => p.IsConnected).Returns(true);
+                    return Task.CompletedTask;
+                });
 
             Sut = new SSHNetSFTPDownloaderClient(client.Object);
 
@@ -47,7 +53,8 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         {
             var client = new Mock<ISftpClientWrapper>();
 
-            client.Setup(s => s.Connect()).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.ConnectAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             Sut = new SSHNetSFTPDownloaderClient(client.Object);
 
@@ -58,7 +65,8 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         {
             var client = new Mock<ISftpClientWrapper>();
 
-            client.Setup(s => s.Connect()).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.ConnectAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             Sut = new SSHNetSFTPDownloaderClient(client.Object);
 
@@ -69,7 +77,8 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         {
             var client = new Mock<ISftpClientWrapper>();
 
-            client.Setup(s => s.Connect()).Throws<Exception>();
+            client.Setup(s => s.ConnectAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("SFTP connection failed"));
 
             Sut = new SSHNetSFTPDownloaderClient(client.Object);
 
