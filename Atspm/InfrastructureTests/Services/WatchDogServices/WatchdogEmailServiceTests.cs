@@ -977,7 +977,7 @@ namespace Utah.Udot.ATSPM.Infrastructure.Services.WatchDogServices.Tests
         }
 
         [Fact]
-        public async Task SendAllEmails_ShouldSkipRampDelivery_WhenWeekdayOnlyAndWeekend()
+        public async Task SendAllEmails_ShouldSendRampDelivery_WhenWeekdayOnlyAndWeekend()
         {
             var service = new WatchdogEmailService(_loggerMock.Object, _emailServiceMock.Object, _weekdayClock);
             var options = new WatchdogEmailOptions
@@ -1007,7 +1007,11 @@ namespace Utah.Udot.ATSPM.Infrastructure.Services.WatchDogServices.Tests
                 new(),
                 new());
 
-            _emailServiceMock.Verify(m => m.SendEmailAsync(It.IsAny<MailMessage>()), Times.Never);
+            _emailServiceMock.Verify(m =>
+                m.SendEmailAsync(It.Is<MailMessage>(msg =>
+                    msg.Subject.Contains("Ramp") &&
+                    msg.To.Cast<MailAddress>().Any(to => to.Address == "ramp@test.com")
+                )), Times.Once);
         }
 
 
