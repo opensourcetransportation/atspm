@@ -60,12 +60,25 @@ namespace Utah.Udot.Atspm.ReportApi.ReportServices
                 return await Task.FromException<TurningMovementCountsResult>(new NullReferenceException("Location not found"));
             }
 
-            var controllerEventLogs = controllerEventLogRepository.GetEventsBetweenDates(Location.LocationIdentifier, parameter.Start, parameter.End).ToList();
+            // A detector's corrected time is raw time + offset - latency. Fetch the raw
+            // boundary events that can move into the requested interval after correction.
+            var shifts = Location.Approaches
+                .SelectMany(approach => approach.GetDetectorsForMetricType(parameter.MetricTypeId))
+                .Select(detector => detector.GetOffset() - detector.LatencyCorrection * 1000)
+                .Append(0)
+                .ToList();
+            var queryStart = parameter.Start.AddMilliseconds(-Math.Max(0, shifts.Max()));
+            var queryEnd = parameter.End.AddMilliseconds(-Math.Min(0, shifts.Min()));
+            var controllerEventLogs = controllerEventLogRepository.GetEventsBetweenDates(
+                Location.LocationIdentifier, queryStart, queryEnd).ToList();
 
             if (controllerEventLogs.IsNullOrEmpty())
             {
-                //return Ok("No Controller Event Logs found for Location");
-                return await Task.FromException<TurningMovementCountsResult>(new NullReferenceException("No Controller Event Logs found for Location"));
+                return new TurningMovementCountsResult
+                {
+                    Charts = new List<TurningMovementCountsLanesResult>(),
+                    Table = new List<TurningMovementCountData>()
+                };
             }
 
             // Capture activity before plan processing can move a boundary event to the report start.
