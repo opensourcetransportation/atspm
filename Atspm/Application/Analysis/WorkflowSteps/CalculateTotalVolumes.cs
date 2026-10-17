@@ -23,16 +23,16 @@ namespace Utah.Udot.Atspm.Analysis.WorkflowSteps
     {
         protected override Task<Tuple<Approach, TotalVolumes>> Process(Tuple<Tuple<Approach, Volumes>, Tuple<Approach, Volumes>> input, CancellationToken cancelToken = default)
         {
-            var p = input.Item1.Item1;
-            var o = input.Item2.Item1;
+            var p = input?.Item1?.Item1;
+            var o = input?.Item2?.Item1;
+
+            if (p?.Location == null || o?.Location == null)
+                return Task.FromResult(Tuple.Create<Approach, TotalVolumes>(null, null));
 
             if (p.DirectionTypeId == new OpposingDirection(o.DirectionTypeId) && p.Location.LocationIdentifier == o.Location.LocationIdentifier)
             {
-                var start1 = input.Item1.Item2.Start;
-                var start2 = input.Item2.Item2.Start;
-
-
-
+                if (input.Item1.Item2 == null || input.Item2.Item2 == null)
+                    return Task.FromResult(Tuple.Create<Approach, TotalVolumes>(p, null));
                 var volumes = input.Item1.Item2.Segments.Union(input.Item2.Item2.Segments);
 
                 var result = new TotalVolumes(volumes, TimeSpan.FromMinutes(15))
@@ -43,8 +43,9 @@ namespace Utah.Udot.Atspm.Analysis.WorkflowSteps
                 result.Segments.ToList().ForEach(f =>
                 {
                     f.LocationIdentifier = p.Location.LocationIdentifier;
-                    f.Primary = input.Item1.Item2.Segments.FirstOrDefault(d => f.InRange(d));
-                    f.Opposing = input.Item2.Item2.Segments.FirstOrDefault(d => f.InRange(d));
+                    // These are whole bins, not timestamps in an end-exclusive range.
+                    f.Primary = input.Item1.Item2.Segments.FirstOrDefault(d => d.Start == f.Start && d.End == f.End);
+                    f.Opposing = input.Item2.Item2.Segments.FirstOrDefault(d => d.Start == f.Start && d.End == f.End);
                 });
 
                 return Task.FromResult(Tuple.Create(p, result));

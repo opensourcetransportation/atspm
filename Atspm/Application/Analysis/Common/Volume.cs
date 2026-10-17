@@ -53,7 +53,7 @@ namespace Utah.Udot.Atspm.Analysis.Common
 
         #region IDetectorCount
 
-        public int DetectorCount => Primary?.DetectorCount + Opposing?.DetectorCount ?? 0;
+        public int DetectorCount => (Primary?.DetectorCount ?? 0) + (Opposing?.DetectorCount ?? 0);
 
         #endregion
 
