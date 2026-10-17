@@ -57,10 +57,20 @@ namespace Identity.Business.Tokens
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
-                new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-                new Claim(JwtRegisteredClaimNames.Name, $"{user.FirstName} {user.LastName}"),
             };
+
+            if (!string.IsNullOrWhiteSpace(user.FirstName))
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName));
+            }
+            if (!string.IsNullOrWhiteSpace(user.LastName))
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName));
+            }
+            if (!string.IsNullOrWhiteSpace(user.FullName))
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Name, user.FullName.Trim()));
+            }
 
             var roleNames = await signInManager.UserManager.GetRolesAsync(user);
             if (roleNames.Contains("Admin"))
