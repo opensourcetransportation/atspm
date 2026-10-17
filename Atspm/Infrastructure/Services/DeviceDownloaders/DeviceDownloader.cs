@@ -100,15 +100,15 @@ namespace Utah.Udot.Atspm.Infrastructure.Services.DeviceDownloaders
 
                 if (!IPAddress.TryParse(parameter?.Ipaddress, out IPAddress ipaddress) || ipaddress == null || !ipaddress.IsValidIpAddress())
                 {
-                    logMessages.InvalidDeviceIpAddressException(ipaddress, new InvalidDeviceIpAddressException(parameter));
-
-                    //throw new InvalidDeviceIpAddressException(parameter);
+                    var exception = new InvalidDeviceIpAddressException(parameter);
+                    logMessages.InvalidDeviceIpAddressException(ipaddress, exception);
+                    throw exception;
                 }
                 else if (_options.Ping && !await ipaddress.PingIpAddressAsync())
                 {
-                    logMessages.InvalidDeviceIpAddressException(ipaddress, new InvalidDeviceIpAddressException(parameter));
-
-                    //throw new InvalidDeviceIpAddressException(parameter);
+                    var exception = new InvalidDeviceIpAddressException(parameter);
+                    logMessages.InvalidDeviceIpAddressException(ipaddress, exception);
+                    throw exception;
                 }
 
                 var deviceIdentifier = parameter?.DeviceIdentifier;
