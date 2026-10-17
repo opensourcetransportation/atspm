@@ -38,7 +38,12 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
 
             client.SetupAllProperties();
 
-            client.Setup(s => s.AutoConnect(default)).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.Connect(It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    client.SetupGet(p => p.IsConnected).Returns(true);
+                    return Task.CompletedTask;
+                });
 
             Client = client.Object;
             Client.Config = config.Object;
@@ -55,7 +60,8 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
 
             client.SetupAllProperties();
 
-            client.Setup(s => s.AutoConnect(default)).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.Connect(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             Client = client.Object;
             Client.Config = config.Object;
@@ -72,7 +78,8 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
 
             client.SetupAllProperties();
 
-            client.Setup(s => s.AutoConnect(default)).Callback(() => client.SetupGet(p => p.IsConnected).Returns(true));
+            client.Setup(s => s.Connect(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             Client = client.Object;
             Client.Config = config.Object;
@@ -85,8 +92,11 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         public override async Task ConnectAsyncControllerConnectionException()
         {
             var client = new Mock<IAsyncFtpClient>();
+            var config = new Mock<FtpConfig>();
 
-            client.Setup(s => s.AutoConnect(default)).Throws<Exception>();
+            client.Setup(s => s.Connect(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("FTP connection failed"));
+            client.SetupGet(s => s.Config).Returns(config.Object);
 
             Sut = new FluentFTPDownloaderClient(client.Object);
 
