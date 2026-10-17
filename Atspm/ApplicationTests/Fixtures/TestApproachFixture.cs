@@ -26,7 +26,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Fixtures
     {
         public TestApproachFixture()
         {
-            var json = File.ReadAllText(new FileInfo(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\Approach2880TestData.json").FullName);
+            var json = TestDataFiles.ReadAllText("Approach2880TestData.json");
             TestApproach = JsonConvert.DeserializeObject<Approach>(json);
         }
 
