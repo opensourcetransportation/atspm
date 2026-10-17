@@ -227,8 +227,9 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
         /// <description><b>API Key:</b> Uses a custom <c>X-API-KEY</c> header.</description>
         /// </item>
         /// </list>
-        /// By default, this adds a global security requirement that prompts the user for these credentials 
-        /// in the Swagger UI for all API operations.
+        /// By default, this adds alternative global security requirements so a JWT or an
+        /// API key can authorize an operation. Operations with different access rules must
+        /// override the global requirement.
         /// </remarks>
         public static SwaggerGenOptions AddAtspmSecurityDefinitions(this SwaggerGenOptions swaggerGenOptions)
         {
@@ -266,7 +267,10 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
 
             swaggerGenOptions.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
-                { jwtSecurityScheme, Array.Empty<string>() },
+                { jwtSecurityScheme, Array.Empty<string>() }
+            });
+            swaggerGenOptions.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
                 { apiKeySecurityScheme, Array.Empty<string>() }
             });
 
