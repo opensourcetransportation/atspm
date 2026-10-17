@@ -65,6 +65,9 @@ namespace Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients
             {
                 ArgumentNullException.ThrowIfNull(resource);
 
+                if (!resource.IsAbsoluteUri)
+                    throw new UriFormatException("Resource URI must be absolute");
+
                 await DeleteResource(resource, token);
             }
             catch (Exception e)

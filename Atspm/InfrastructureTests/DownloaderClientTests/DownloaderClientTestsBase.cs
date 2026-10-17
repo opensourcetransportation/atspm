@@ -127,11 +127,7 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         [Trait(nameof(IDownloaderClient), nameof(IDownloaderClient.DeleteResourceAsync))]
         public async virtual Task DeleteResourceAsyncInvalidResource()
         {
-            var uri = new UriBuilder()
-            {
-                Host = "127.0.0.1",
-                Path = "/a/b/    c",
-            }.Uri;
+            var uri = new Uri("a/b/c", UriKind.Relative);
 
             var ex = await Record.ExceptionAsync(async () => await Sut.DeleteResourceAsync(uri));
 
