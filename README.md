@@ -2,6 +2,8 @@
 
 ATSPM collects high-resolution traffic signal controller events and presents reports that help traffic engineers and maintenance teams investigate signal operations.
 
-For a local Docker Compose installation, follow the [setup guide](Atspm/README.md). It covers the environment file, development certificates, startup, and troubleshooting. The [database installer guide](Atspm/DatabaseInstaller/README.md) documents migration and transfer commands.
+**Get started:** follow the [five-step installation guide](Atspm/README.md), including the [sample `.env` file and setting explanations](Atspm/README.md#sample-env-file). Copy the template, fill five settings, create the local certificate, start Docker Compose, and sign in. Docker builds the app and sets up PostgreSQL for you.
 
-This repository is a community development fork of [OpenSourceTransportation/atspm](https://github.com/opensourcetransportation/atspm). Changes are intended to stay compatible with upstream. The project is licensed under [Apache License 2.0](LICENSE).
+The [database installer guide](Atspm/DatabaseInstaller/README.md) covers importing configuration and event data after startup.
+
+The project is licensed under [Apache License 2.0](LICENSE).
