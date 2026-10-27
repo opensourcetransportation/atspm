@@ -181,6 +181,7 @@ namespace Utah.Udot.Atspm.Extensions
                 .SelectMany(group =>
                 {
                     var windows = group
+                        .OrderBy(e => e.Timestamp)
                         //.KeepFirstSequentialEvent(IndianaEnumerations.PhaseBeginGreen)
                         //.KeepFirstSequentialEvent(IndianaEnumerations.PhaseBeginYellowChange)
                         //.KeepFirstSequentialEvent(IndianaEnumerations.PhaseEndYellowChange)
