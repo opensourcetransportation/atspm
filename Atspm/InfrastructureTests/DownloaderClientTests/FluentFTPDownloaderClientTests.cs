@@ -21,6 +21,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Utah.Udot.Atspm.Infrastructure.Services.DownloaderClients;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
@@ -307,8 +308,6 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
         public override async Task ListResourcesAsyncSucceeded()
         {
             var client = new Mock<IAsyncFtpClient>();
-            var ftpListItem = new Mock<FtpListItem>();
-
             client.SetupGet(p => p.Host).Returns("localhost");
             client.SetupGet(p => p.Port).Returns(21);
             client.SetupGet(p => p.IsConnected).Returns(true);
@@ -316,12 +315,26 @@ namespace Utah.Udot.Atspm.InfrastructureTests.DownloaderClientTests
             client.Setup(s => s.GetListing(It.IsAny<string>(), It.IsAny<FtpListOption>(), default))
                .ReturnsAsync((string a, FtpListOption b, CancellationToken c) =>
                [
-                   new FtpListItem("test", 0, FtpObjectType.File, DateTime.Now) { FullName = a }
+                   new FtpListItem("completed", 0, FtpObjectType.File, new DateTime(2024, 1, 1)) { FullName = a, RawModified = new DateTime(2024, 1, 1) },
+                   new FtpListItem("newest", 0, FtpObjectType.File, new DateTime(2024, 1, 2)) { FullName = a + "/newest", RawModified = new DateTime(2024, 1, 2) }
                ]);
 
             Sut = new FluentFTPDownloaderClient(client.Object);
 
             await base.ListResourcesAsyncSucceeded();
+        }
+
+        [Fact]
+        public async Task ListResourcesAsyncEmptyDirectoryReturnsNoResources()
+        {
+            var client = new Mock<IAsyncFtpClient>();
+            client.SetupGet(p => p.IsConnected).Returns(true);
+            client.Setup(s => s.GetListing(It.IsAny<string>(), It.IsAny<FtpListOption>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<FtpListItem>());
+
+            Sut = new FluentFTPDownloaderClient(client.Object);
+
+            Assert.Empty(await Sut.ListResourcesAsync("/empty"));
         }
 
         public override async Task ListResourcesAsyncNotConnected()
