@@ -21,7 +21,7 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<Version>5.4.0-rc2</Version>
+		<Version>5.4.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -13,7 +13,7 @@
 		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
 		<UserSecretsId>4a25a28a-6471-4d98-ae56-b46fe556756b</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-		<Version>5.4.0-rc2</Version>
+		<Version>5.4.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

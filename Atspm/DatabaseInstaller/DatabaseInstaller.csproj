@@ -8,7 +8,7 @@
     <UserSecretsId>ada599fb-dce5-4a1b-9bd5-7c60d676d45f</UserSecretsId>
 	  <VersionPrefix>5.1.2</VersionPrefix>
 	  <VersionSuffix></VersionSuffix>
-	  <Version>5.4.0-rc2</Version>
+	  <Version>5.4.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
