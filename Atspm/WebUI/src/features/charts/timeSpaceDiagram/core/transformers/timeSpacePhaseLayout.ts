@@ -67,6 +67,8 @@ export function buildTimeSpacePhaseLayout<T extends TimeSpaceCoreRow>(
     const displayDistance = locationCenterDistanceData[index]
 
     if (
+      // A single location has no segment from which to interpolate offsets.
+      rawDistanceData.length < 2 ||
       rawDistance == null ||
       displayDistance == null ||
       !Number.isFinite(rawDistanceOffset)

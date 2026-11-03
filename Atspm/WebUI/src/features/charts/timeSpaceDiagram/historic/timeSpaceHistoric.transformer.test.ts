@@ -31,6 +31,18 @@ type GraphicNode = {
   children?: GraphicNode[]
 }
 
+function collectRenderTexts(node: unknown): string[] {
+  if (!node || typeof node !== 'object') return []
+
+  const { style, children } = node as GraphicNode
+  const texts =
+    typeof style?.text === 'string'
+      ? [style.text.replace(/\{[^|}]+\|([^}]+)\}/g, '$1')]
+      : []
+
+  return [...texts, ...(children ?? []).flatMap(collectRenderTexts)]
+}
+
 function buildHistoricLocation(
   phaseType: 'Primary' | 'Opposing',
   overrides: Partial<RawTimeSpaceHistoricData> = {}
