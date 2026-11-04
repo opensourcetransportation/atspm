@@ -66,6 +66,9 @@ dkms.conf
 *.vbproj.user
 
 # Local configuration files
+.env
+**/.env
+nginx/certs/
 **/Properties/launchSettings.json
 appsettings.Development.json
 appsettings.Local.json
@@ -79,6 +82,8 @@ appsettings.*.json
 secrets.json
 
 # Certificates and keys
+*.key
+*.crt
 *.pfx
 *.p12
 *.snk

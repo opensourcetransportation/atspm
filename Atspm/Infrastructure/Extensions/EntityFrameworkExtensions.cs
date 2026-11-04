@@ -90,6 +90,7 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
             catch (Exception e)
             {
                 logMessage.ApplyMigrationsException(contextName, e);
+                throw;
             }
         }
 
@@ -128,7 +129,12 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
                     if (!await roleManager.RoleExistsAsync(adminRole))
                     {
                         logMessages.CreatingRole(adminRole);
-                        await roleManager.CreateAsync(new IdentityRole(adminRole));
+                        var roleResult = await roleManager.CreateAsync(new IdentityRole(adminRole));
+                        if (!roleResult.Succeeded)
+                        {
+                            throw new InvalidOperationException("Failed to create admin role: " +
+                                string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                        }
                     }
 
                     var addToRoleResult = await userManager.AddToRoleAsync(user, adminRole);
@@ -141,12 +147,14 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
                     {
                         var errors = string.Join(", ", addToRoleResult.Errors.Select(e => e.Description));
                         logMessages.RoleAssignmentError(adminRole, errors);
+                        throw new InvalidOperationException("Failed to assign admin role: " + errors);
                     }
                 }
                 else
                 {
                     var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                     logMessages.UserCreationError(errors);
+                    throw new InvalidOperationException("Failed to create admin user: " + errors);
                 }
             }
             else
@@ -186,7 +194,7 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
                     {
                         var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                         logMessages.RoleCreationError(entry.Key, errors);
-                        continue;
+                        throw new InvalidOperationException("Failed to create role " + entry.Key + ": " + errors);
                     }
                 }
 
@@ -195,7 +203,12 @@ namespace Utah.Udot.Atspm.Infrastructure.Extensions
                 {
                     if (!existingClaims.Any(c => c.Value == permission))
                     {
-                        await roleManager.AddClaimAsync(role, new Claim(AtspmAuthorization.RoleClaimType, permission));
+                        var claimResult = await roleManager.AddClaimAsync(role, new Claim(AtspmAuthorization.RoleClaimType, permission));
+                        if (!claimResult.Succeeded)
+                        {
+                            throw new InvalidOperationException("Failed to add permission to role " + entry.Key + ": " +
+                                string.Join(", ", claimResult.Errors.Select(e => e.Description)));
+                        }
                         logMessages.PermissionAdded(permission, entry.Key);
                     }
                 }

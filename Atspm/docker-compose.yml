@@ -2,70 +2,72 @@
 
 x-environment: &default-environment
   ASPNETCORE_ENVIRONMENT: "Development"
-  ASPNETCORE_Kestrel__Certificates__Default__Password: "password"
-  ASPNETCORE_Kestrel__Certificates__Default__Path: "/root/.aspnet/https/aspnetapp.pfx"
+  ASPNETCORE_Kestrel__Certificates__Default__Password: "${CERT_PASSWORD:?Set CERT_PASSWORD in .env}"
+  ASPNETCORE_Kestrel__Certificates__Default__Path: "/app/certs/aspnetapp.pfx"
   ASPNETCORE_URLS: "https://+:5000"
 
   # Allowed Hosts
-  AllowedHosts: "${ALLOWED_HOSTS}"
+  AllowedHosts: "${ALLOWED_HOSTS:-*}"
 
   # Database Configuration
-  DatabaseConfiguration__ConfigContext__DBType: "${DatabaseConfiguration__ConfigContext__DBType}"
-  DatabaseConfiguration__ConfigContext__Host: "${DatabaseConfiguration__ConfigContext__Host}"
-  DatabaseConfiguration__ConfigContext__Port: "${DatabaseConfiguration__ConfigContext__Port}"
-  DatabaseConfiguration__ConfigContext__Database: "${DatabaseConfiguration__ConfigContext__Database}"
-  DatabaseConfiguration__ConfigContext__User: "${DatabaseConfiguration__ConfigContext__User}"
-  DatabaseConfiguration__ConfigContext__Password: "${DatabaseConfiguration__ConfigContext__Password}"
-  DatabaseConfiguration__ConfigContext__Options__CommandTimeout: "${DatabaseConfiguration__ConfigContext__Options__CommandTimeout}"
-  DatabaseConfiguration__ConfigContext__Options__Keepalive: "${DatabaseConfiguration__ConfigContext__Options__Keepalive}"
-  DatabaseConfiguration__ConfigContext__Options__Pooling: "${DatabaseConfiguration__ConfigContext__Options__Pooling}"
-  DatabaseConfiguration__ConfigContext__Options__Timeout: "${DatabaseConfiguration__ConfigContext__Options__Timeout}"
-  DatabaseConfiguration__AggregationContext__DBType: "${DatabaseConfiguration__AggregationContext__DBType}"
-  DatabaseConfiguration__AggregationContext__Host: "${DatabaseConfiguration__AggregationContext__Host}"
-  DatabaseConfiguration__AggregationContext__Port: "${DatabaseConfiguration__AggregationContext__Port}"
-  DatabaseConfiguration__AggregationContext__Database: "${DatabaseConfiguration__AggregationContext__Database}"
-  DatabaseConfiguration__AggregationContext__User: "${DatabaseConfiguration__AggregationContext__User}"
-  DatabaseConfiguration__AggregationContext__Password: "${DatabaseConfiguration__AggregationContext__Password}"
-  DatabaseConfiguration__AggregationContext__Options__CommandTimeout: "${DatabaseConfiguration__AggregationContext__Options__CommandTimeout}"
-  DatabaseConfiguration__AggregationContext__Options__Keepalive: "${DatabaseConfiguration__AggregationContext__Options__Keepalive}"
-  DatabaseConfiguration__AggregationContext__Options__Pooling: "${DatabaseConfiguration__AggregationContext__Options__Pooling}"
-  DatabaseConfiguration__AggregationContext__Options__Timeout: "${DatabaseConfiguration__AggregationContext__Options__Timeout}"
-  DatabaseConfiguration__EventLogContext__DBType: "${DatabaseConfiguration__EventLogContext__DBType}"
-  DatabaseConfiguration__EventLogContext__Host: "${DatabaseConfiguration__EventLogContext__Host}"
-  DatabaseConfiguration__EventLogContext__Port: "${DatabaseConfiguration__EventLogContext__Port}"
-  DatabaseConfiguration__EventLogContext__Database: "${DatabaseConfiguration__EventLogContext__Database}"
-  DatabaseConfiguration__EventLogContext__User: "${DatabaseConfiguration__EventLogContext__User}"
-  DatabaseConfiguration__EventLogContext__Password: "${DatabaseConfiguration__EventLogContext__Password}"
-  DatabaseConfiguration__EventLogContext__Options__CommandTimeout: "${DatabaseConfiguration__EventLogContext__Options__CommandTimeout}"
-  DatabaseConfiguration__EventLogContext__Options__Keepalive: "${DatabaseConfiguration__EventLogContext__Options__Keepalive}"
-  DatabaseConfiguration__EventLogContext__Options__Pooling: "${DatabaseConfiguration__EventLogContext__Options__Pooling}"
-  DatabaseConfiguration__EventLogContext__Options__Timeout: "${DatabaseConfiguration__EventLogContext__Options__Timeout}"
-  DatabaseConfiguration__IdentityContext__DBType: "${DatabaseConfiguration__IdentityContext__DBType}"
-  DatabaseConfiguration__IdentityContext__Host: "${DatabaseConfiguration__IdentityContext__Host}"
-  DatabaseConfiguration__IdentityContext__Port: "${DatabaseConfiguration__IdentityContext__Port}"
-  DatabaseConfiguration__IdentityContext__Database: "${DatabaseConfiguration__IdentityContext__Database}"
-  DatabaseConfiguration__IdentityContext__User: "${DatabaseConfiguration__IdentityContext__User}"
-  DatabaseConfiguration__IdentityContext__Password: "${DatabaseConfiguration__IdentityContext__Password}"
-  DatabaseConfiguration__IdentityContext__Options__CommandTimeout: "${DatabaseConfiguration__IdentityContext__Options__CommandTimeout}"
-  DatabaseConfiguration__IdentityContext__Options__Keepalive: "${DatabaseConfiguration__IdentityContext__Options__Keepalive}"
-  DatabaseConfiguration__IdentityContext__Options__Pooling: "${DatabaseConfiguration__IdentityContext__Options__Pooling}"
-  DatabaseConfiguration__IdentityContext__Options__Timeout: "${DatabaseConfiguration__IdentityContext__Options__Timeout}"
+  DatabaseConfiguration__ConfigContext__DBType: "${DatabaseConfiguration__ConfigContext__DBType:-PostgreSql}"
+  DatabaseConfiguration__ConfigContext__Host: "${DatabaseConfiguration__ConfigContext__Host:-postgres}"
+  DatabaseConfiguration__ConfigContext__Port: "${DatabaseConfiguration__ConfigContext__Port:-5432}"
+  DatabaseConfiguration__ConfigContext__Database: "${DatabaseConfiguration__ConfigContext__Database:-ATSPM-Config}"
+  DatabaseConfiguration__ConfigContext__User: "${DatabaseConfiguration__ConfigContext__User:-${POSTGRES_USER:-atspm}}"
+  DatabaseConfiguration__ConfigContext__Password: "${DatabaseConfiguration__ConfigContext__Password:-${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}}"
+  DatabaseConfiguration__ConfigContext__Options__CommandTimeout: "${DatabaseConfiguration__ConfigContext__Options__CommandTimeout:-60}"
+  DatabaseConfiguration__ConfigContext__Options__Keepalive: "${DatabaseConfiguration__ConfigContext__Options__Keepalive:-30}"
+  DatabaseConfiguration__ConfigContext__Options__Pooling: "${DatabaseConfiguration__ConfigContext__Options__Pooling:-true}"
+  DatabaseConfiguration__ConfigContext__Options__Timeout: "${DatabaseConfiguration__ConfigContext__Options__Timeout:-30}"
+  DatabaseConfiguration__AggregationContext__DBType: "${DatabaseConfiguration__AggregationContext__DBType:-PostgreSql}"
+  DatabaseConfiguration__AggregationContext__Host: "${DatabaseConfiguration__AggregationContext__Host:-postgres}"
+  DatabaseConfiguration__AggregationContext__Port: "${DatabaseConfiguration__AggregationContext__Port:-5432}"
+  DatabaseConfiguration__AggregationContext__Database: "${DatabaseConfiguration__AggregationContext__Database:-ATSPM-Aggregation}"
+  DatabaseConfiguration__AggregationContext__User: "${DatabaseConfiguration__AggregationContext__User:-${POSTGRES_USER:-atspm}}"
+  DatabaseConfiguration__AggregationContext__Password: "${DatabaseConfiguration__AggregationContext__Password:-${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}}"
+  DatabaseConfiguration__AggregationContext__Options__CommandTimeout: "${DatabaseConfiguration__AggregationContext__Options__CommandTimeout:-60}"
+  DatabaseConfiguration__AggregationContext__Options__Keepalive: "${DatabaseConfiguration__AggregationContext__Options__Keepalive:-30}"
+  DatabaseConfiguration__AggregationContext__Options__Pooling: "${DatabaseConfiguration__AggregationContext__Options__Pooling:-true}"
+  DatabaseConfiguration__AggregationContext__Options__Timeout: "${DatabaseConfiguration__AggregationContext__Options__Timeout:-30}"
+  DatabaseConfiguration__EventLogContext__DBType: "${DatabaseConfiguration__EventLogContext__DBType:-PostgreSql}"
+  DatabaseConfiguration__EventLogContext__Host: "${DatabaseConfiguration__EventLogContext__Host:-postgres}"
+  DatabaseConfiguration__EventLogContext__Port: "${DatabaseConfiguration__EventLogContext__Port:-5432}"
+  DatabaseConfiguration__EventLogContext__Database: "${DatabaseConfiguration__EventLogContext__Database:-ATSPM-EventLogs}"
+  DatabaseConfiguration__EventLogContext__User: "${DatabaseConfiguration__EventLogContext__User:-${POSTGRES_USER:-atspm}}"
+  DatabaseConfiguration__EventLogContext__Password: "${DatabaseConfiguration__EventLogContext__Password:-${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}}"
+  DatabaseConfiguration__EventLogContext__Options__CommandTimeout: "${DatabaseConfiguration__EventLogContext__Options__CommandTimeout:-60}"
+  DatabaseConfiguration__EventLogContext__Options__Keepalive: "${DatabaseConfiguration__EventLogContext__Options__Keepalive:-30}"
+  DatabaseConfiguration__EventLogContext__Options__Pooling: "${DatabaseConfiguration__EventLogContext__Options__Pooling:-true}"
+  DatabaseConfiguration__EventLogContext__Options__Timeout: "${DatabaseConfiguration__EventLogContext__Options__Timeout:-30}"
+  DatabaseConfiguration__IdentityContext__DBType: "${DatabaseConfiguration__IdentityContext__DBType:-PostgreSql}"
+  DatabaseConfiguration__IdentityContext__Host: "${DatabaseConfiguration__IdentityContext__Host:-postgres}"
+  DatabaseConfiguration__IdentityContext__Port: "${DatabaseConfiguration__IdentityContext__Port:-5432}"
+  DatabaseConfiguration__IdentityContext__Database: "${DatabaseConfiguration__IdentityContext__Database:-ATSPM-Identity}"
+  DatabaseConfiguration__IdentityContext__User: "${DatabaseConfiguration__IdentityContext__User:-${POSTGRES_USER:-atspm}}"
+  DatabaseConfiguration__IdentityContext__Password: "${DatabaseConfiguration__IdentityContext__Password:-${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}}"
+  DatabaseConfiguration__IdentityContext__Options__CommandTimeout: "${DatabaseConfiguration__IdentityContext__Options__CommandTimeout:-60}"
+  DatabaseConfiguration__IdentityContext__Options__Keepalive: "${DatabaseConfiguration__IdentityContext__Options__Keepalive:-30}"
+  DatabaseConfiguration__IdentityContext__Options__Pooling: "${DatabaseConfiguration__IdentityContext__Options__Pooling:-true}"
+  DatabaseConfiguration__IdentityContext__Options__Timeout: "${DatabaseConfiguration__IdentityContext__Options__Timeout:-30}"
 
   # JWT Configuration
-  Jwt__ExpireDays: "${JWT_EXPIRE_DAYS}"
-  Jwt__Key: "${JWT_KEY}"
-  Jwt__Issuer: "${JWT_ISSUER}"
+  Jwt__ExpireDays: "${JWT_EXPIRE_DAYS:-1}"
+  Jwt__Key: "${JWT_KEY:?Set JWT_KEY in .env}"
+  Jwt__Issuer: "${JWT_ISSUER:-ATSPM-local}"
 
 services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: "${POSTGRES_USER:-atspm}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atspm}"]
       interval: 10s
       retries: 5
 
@@ -78,34 +80,34 @@ services:
         condition: service_healthy
     environment:
       <<: *default-environment
-      ADMIN_EMAIL: "${ADMIN_EMAIL}"
-      ADMIN_ROLE: "${ADMIN_ROLE}"
-      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
-      SEED_ADMIN: "${SEED_ADMIN}"
-    entrypoint: >
-      dotnet DatabaseInstaller.dll update
-      --config-connection "${CONFIG_CONNECTION}"
-      --aggregation-connection "${AGGREGATION_CONNECTION}"
-      --eventlog-connection "${EVENTLOG_CONNECTION}"
-      --identity-connection "${IDENTITY_CONNECTION}"
-      --provider "PostgreSQL"
-      --admin-email "${ADMIN_EMAIL}"
-      --admin-role "${ADMIN_ROLE}"
-      --admin-password "${ADMIN_PASSWORD}"
-      --seed-admin "${SEED_ADMIN}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}"
+      ADMIN_ROLE: "${ADMIN_ROLE:-Admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}"
+      SEED_ADMIN: "${SEED_ADMIN:-true}"
+    entrypoint:
+      - dotnet
+      - DatabaseInstaller.dll
+      - update
+      - --admin-email
+      - ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      - --admin-role
+      - ${ADMIN_ROLE:-Admin}
+      - --admin-password
+      - ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      - --seed-admin
+      - ${SEED_ADMIN:-true}
 
   configapi:
     build:
       context: .
       dockerfile: ConfigApi/Dockerfile
     ports:
-      - "44400:5000"
+      - "127.0.0.1:44400:5000"
     environment:
       <<: *default-environment
       ASPNETCORE_URLS: "https://+:5000"
     volumes:
-      - ${CERT_LOCATION}
-    user: root
+      - ${CERT_LOCATION:-./nginx/certs:/app/certs:ro}
     depends_on:
       database-installer:
         condition: service_completed_successfully
@@ -115,12 +117,12 @@ services:
       context: .
       dockerfile: DataApi/Dockerfile
     ports:
-      - "44401:5001"
+      - "127.0.0.1:44401:5001"
     environment:
       <<: *default-environment
       ASPNETCORE_URLS: "https://+:5001"
     volumes:
-      - ${CERT_LOCATION}
+      - ${CERT_LOCATION:-./nginx/certs:/app/certs:ro}
     depends_on:
       database-installer:
         condition: service_completed_successfully
@@ -130,12 +132,12 @@ services:
       context: .
       dockerfile: ReportApi/Dockerfile
     ports:
-      - "44402:5002"
+      - "127.0.0.1:44402:5002"
     environment:
       <<: *default-environment
       ASPNETCORE_URLS: "https://+:5002"
     volumes:
-      - ${CERT_LOCATION}
+      - ${CERT_LOCATION:-./nginx/certs:/app/certs:ro}
     depends_on:
       database-installer:
         condition: service_completed_successfully
@@ -145,18 +147,18 @@ services:
       context: .
       dockerfile: IdentityApi/Dockerfile
     ports:
-      - "44403:5003"
+      - "127.0.0.1:44403:5003"
     environment:
       <<: *default-environment
       ASPNETCORE_URLS: "https://+:5003"
 
-      EmailConfiguration__SmtpEmailService__Host: "${EmailConfiguration__Host}"
-      EmailConfiguration__SmtpEmailService__Port: "${EmailConfiguration__Port}"
-      EmailConfiguration__SmtpEmailService__UserName: "${EmailConfiguration__UserName}"
-      EmailConfiguration__SmtpEmailService__Password: "${EmailConfiguration__Password}"
-      EmailConfiguration__SmtpEmailService__EnableSsl: "${EmailConfiguration__EnableSsl}"
+      EmailConfiguration__SmtpEmailService__Host: "${EmailConfiguration__Host:-}"
+      EmailConfiguration__SmtpEmailService__Port: "${EmailConfiguration__Port:-25}"
+      EmailConfiguration__SmtpEmailService__UserName: "${EmailConfiguration__UserName:-}"
+      EmailConfiguration__SmtpEmailService__Password: "${EmailConfiguration__Password:-}"
+      EmailConfiguration__SmtpEmailService__EnableSsl: "${EmailConfiguration__EnableSsl:-false}"
     volumes:      
-      - ${CERT_LOCATION}
+      - ${CERT_LOCATION:-./nginx/certs:/app/certs:ro}
     depends_on:
       database-installer:
         condition: service_completed_successfully
@@ -165,7 +167,6 @@ services:
     build:
       context: ./WebUI
       dockerfile: Dockerfile
-    container_name: webui
     volumes:
       - ./frontend-env.txt:/app/Configuration/frontend-env/frontend-env.txt:ro
     depends_on:
@@ -181,8 +182,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "3000:80"
-      - "3443:443"
+      - "127.0.0.1:3000:80"
+      - "127.0.0.1:3443:443"
     volumes:
       - ./default.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
@@ -199,60 +200,62 @@ services:
         condition: service_started
 
   watchdog:
+    profiles: ["tools"]
     build:
       context: .
       dockerfile: WatchDog/Dockerfile
     environment:
       <<: *default-environment
 
-      EmailConfiguration__SmtpEmailService__Host: "${EmailConfiguration__Host}"
-      EmailConfiguration__SmtpEmailService__Port: "${EmailConfiguration__Port}"
-      EmailConfiguration__SmtpEmailService__UserName: "${EmailConfiguration__UserName}"
-      EmailConfiguration__SmtpEmailService__Password: "${EmailConfiguration__Password}"
-      EmailConfiguration__SmtpEmailService__EnableSsl: "${EmailConfiguration__EnableSsl}"
-      WatchdogConfiguration__ScanDate: "${WatchdogConfiguration__ScanDate}"
-      WatchdogConfiguration__ConsecutiveCount: "${WatchdogConfiguration__ConsecutiveCount}"
-      WatchdogConfiguration__LowHitThreshold: "${WatchdogConfiguration__LowHitThreshold}"
-      WatchdogConfiguration__MaximumPedestrianEvents: "${WatchdogConfiguration__MaximumPedestrianEvents}"
-      WatchdogConfiguration__MinimumRecords: "${WatchdogConfiguration__MinimumRecords}"
-      WatchdogConfiguration__MinPhaseTerminations: "${WatchdogConfiguration__MinPhaseTerminations}"
-      WatchdogConfiguration__PercentThreshold: "${WatchdogConfiguration__PercentThreshold}"
-      WatchdogConfiguration__PreviousDayPMPeakEnd: "${WatchdogConfiguration__PreviousDayPMPeakEnd}"
-      WatchdogConfiguration__PreviousDayPMPeakStart: "${WatchdogConfiguration__PreviousDayPMPeakStart}"
-      WatchdogConfiguration__ScanDayEndHour: "${WatchdogConfiguration__ScanDayEndHour}"
-      WatchdogConfiguration__ScanDayStartHour: "${WatchdogConfiguration__ScanDayStartHour}"
-      WatchdogConfiguration__RampMainlineStartHour: "${WatchdogConfiguration__RampMainlineStartHour}"
-      WatchdogConfiguration__RampMainlineEndHour: "${WatchdogConfiguration__RampMainlineEndHour}"
-      WatchdogConfiguration__RampStuckQueueStartHour: "${WatchdogConfiguration__RampStuckQueueStartHour}"
-      WatchdogConfiguration__RampStuckQueueEndHour: "${WatchdogConfiguration__RampStuckQueueEndHour}"
-      WatchdogConfiguration__WeekdayOnly: "${WatchdogConfiguration__WeekdayOnly}"
-      WatchdogConfiguration__DefaultEmailAddress: "${WatchdogConfiguration__DefaultEmailAddress}"
-      WatchdogConfiguration__EmailAllErrors: "${WatchdogConfiguration__EmailAllErrors}"
-      WatchdogConfiguration__Sort: "${WatchdogConfiguration__Sort}"
+      EmailConfiguration__SmtpEmailService__Host: "${EmailConfiguration__Host:-}"
+      EmailConfiguration__SmtpEmailService__Port: "${EmailConfiguration__Port:-25}"
+      EmailConfiguration__SmtpEmailService__UserName: "${EmailConfiguration__UserName:-}"
+      EmailConfiguration__SmtpEmailService__Password: "${EmailConfiguration__Password:-}"
+      EmailConfiguration__SmtpEmailService__EnableSsl: "${EmailConfiguration__EnableSsl:-false}"
+      WatchdogConfiguration__TimeZoneId: "${WatchdogConfiguration__TimeZoneId:-America/Denver}"
+      WatchdogConfiguration__ConsecutiveCount: "${WatchdogConfiguration__ConsecutiveCount:-3}"
+      WatchdogConfiguration__LowHitThreshold: "${WatchdogConfiguration__LowHitThreshold:-50}"
+      WatchdogConfiguration__MaximumPedestrianEvents: "${WatchdogConfiguration__MaximumPedestrianEvents:-200}"
+      WatchdogConfiguration__MinimumRecords: "${WatchdogConfiguration__MinimumRecords:-500}"
+      WatchdogConfiguration__MinPhaseTerminations: "${WatchdogConfiguration__MinPhaseTerminations:-50}"
+      WatchdogConfiguration__PercentThreshold: "${WatchdogConfiguration__PercentThreshold:-0.9}"
+      WatchdogConfiguration__PmPeakEndHour: "${WatchdogConfiguration__PmPeakEndHour:-18}"
+      WatchdogConfiguration__PmPeakStartHour: "${WatchdogConfiguration__PmPeakStartHour:-17}"
+      WatchdogConfiguration__AmEndHour: "${WatchdogConfiguration__AmEndHour:-5}"
+      WatchdogConfiguration__AmStartHour: "${WatchdogConfiguration__AmStartHour:-1}"
+      WatchdogConfiguration__RampMainlineStartHour: "${WatchdogConfiguration__RampMainlineStartHour:-15}"
+      WatchdogConfiguration__RampMainlineEndHour: "${WatchdogConfiguration__RampMainlineEndHour:-19}"
+      WatchdogConfiguration__RampStuckQueueStartHour: "${WatchdogConfiguration__RampStuckQueueStartHour:-1}"
+      WatchdogConfiguration__RampStuckQueueEndHour: "${WatchdogConfiguration__RampStuckQueueEndHour:-4}"
+      WatchdogConfiguration__WeekdayOnly: "${WatchdogConfiguration__WeekdayOnly:-true}"
+      WatchdogConfiguration__DefaultEmailAddress: "${WatchdogConfiguration__DefaultEmailAddress:-${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}}"
+      WatchdogConfiguration__EmailAllErrors: "${WatchdogConfiguration__EmailAllErrors:-false}"
+      WatchdogConfiguration__Sort: "${WatchdogConfiguration__Sort:-Location}"
     depends_on:
       database-installer:
         condition: service_completed_successfully
     entrypoint: ["dotnet", "WatchDog.dll"]
 
   eventlogutility:
+    profiles: ["tools"]
     build:
       context: .
       dockerfile: EventLogUtility/Dockerfile
     environment:
       <<: *default-environment
 
-      DeviceDownloaderConfiguration__DeviceDownloader__BasePath: "${DeviceDownloaderConfiguration__DeviceDownloader__BasePath}"
-      DeviceDownloaderConfiguration__DeviceDownloader__DeleteRemoteFile: "${DeviceDownloaderConfiguration__DeviceDownloader__DeleteRemoteFile}"
-      DeviceDownloaderConfiguration__DeviceDownloader__Ping: "${DeviceDownloaderConfiguration__DeviceDownloader__Ping}"
+      DeviceDownloaderConfiguration__DeviceDownloader__BasePath: "${DeviceDownloaderConfiguration__DeviceDownloader__BasePath:-/app/logs}"
+      DeviceDownloaderConfiguration__DeviceDownloader__DeleteRemoteFile: "${DeviceDownloaderConfiguration__DeviceDownloader__DeleteRemoteFile:-false}"
+      DeviceDownloaderConfiguration__DeviceDownloader__Ping: "${DeviceDownloaderConfiguration__DeviceDownloader__Ping:-false}"
 
-      EventLogImporterConfiguration__EventLogFileImporter__EarliestAcceptableDate: "${EventLogImporterConfiguration__EventLogFileImporter__EarliestAcceptableDate}"
-      EventLogImporterConfiguration__EventLogFileImporter__DeleteSource: "${EventLogImporterConfiguration__EventLogFileImporter__DeleteSource}"
+      EventLogImporterConfiguration__EventLogFileImporter__EarliestAcceptableDate: "${EventLogImporterConfiguration__EventLogFileImporter__EarliestAcceptableDate:-1980-01-01}"
+      EventLogImporterConfiguration__EventLogFileImporter__DeleteSource: "${EventLogImporterConfiguration__EventLogFileImporter__DeleteSource:-false}"
 
-      EventLogUtility__SiemensDecoder: "${EventLogUtility__SiemensDecoder}"
+      EventLogUtility__SiemensDecoder: "${EventLogUtility__SiemensDecoder:-false}"
 
-      DeviceEventLoggingConfiguration__Path: "${DeviceEventLoggingConfiguration__Path}"
-      DeviceEventLoggingConfiguration__BatchSize: "${DeviceEventLoggingConfiguration__BatchSize}"
-      DeviceEventLoggingConfiguration__ParallelProcesses: "${DeviceEventLoggingConfiguration__ParallelProcesses}"
+      DeviceEventLoggingConfiguration__Path: "${DeviceEventLoggingConfiguration__Path:-/app/logs}"
+      DeviceEventLoggingConfiguration__ProcessingBatchSize: "${DeviceEventLoggingConfiguration__ProcessingBatchSize:-50000}"
+      DeviceEventLoggingConfiguration__ParallelProcesses: "${DeviceEventLoggingConfiguration__ParallelProcesses:-50}"
     depends_on:
       database-installer:
         condition: service_completed_successfully
@@ -261,4 +264,4 @@ services:
 
 
 volumes:
-  aspnet_https:
+  postgres_data:
