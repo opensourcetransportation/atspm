@@ -39,6 +39,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="Analysis\TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="Analysis\WorkflowSteps\CalculateDwellTimeTests.cs" />
 	</ItemGroup>
 
