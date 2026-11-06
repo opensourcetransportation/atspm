@@ -53,7 +53,8 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.WorkflowSteps
         /// <inheritdoc/>
         protected override AggregatePreemptStep CreateStep(Location config, IEnumerable<IndianaEvent> input, IEnumerable<PreemptionAggregation> expected)
         {
-            var timeline = DateTime.Today.CreateTimeline<StartEndRange>(TimeSpan.FromMinutes(15));
+            var start = input != null && input.Any() ? input.Min(e => e.Timestamp).Date : new DateTime(2025, 12, 25);
+            var timeline = new Timeline<StartEndRange>(start, start.AddDays(1), TimeSpan.FromMinutes(15));
             return new AggregatePreemptStep(timeline);
         }
 

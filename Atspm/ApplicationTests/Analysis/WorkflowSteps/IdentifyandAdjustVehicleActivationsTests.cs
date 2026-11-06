@@ -287,13 +287,18 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.WorkflowSteps
         }
 
         [Theory]
-        [InlineData(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\IdentifyandAdjustVehicleActivationsTestData1.json")]
-        [InlineData(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\IdentifyandAdjustVehicleActivationsTestData2.json")]
-        [InlineData(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\IdentifyandAdjustVehicleActivationsTestData3.json")]
+        [InlineData("IdentifyandAdjustVehicleActivationsTestData1.json")]
+        [InlineData("IdentifyandAdjustVehicleActivationsTestData2.json")]
+        [InlineData("IdentifyandAdjustVehicleActivationsTestData3.json")]
         public async void IdentifyandAdjustVehicleActivationsFromFileTest(string file)
         {
-            var json = File.ReadAllText(new FileInfo(file).FullName);
+            var json = TestDataFiles.ReadAllText(file);
             var testFile = JsonConvert.DeserializeObject<IdentifyandAdjustVehicleActivationsTestData>(json);
+
+            // EventLogModelBase intentionally omits this field from serialized batches.
+            // The batch location is supplied by the owning configuration when loading logs.
+            foreach (var log in testFile.Input)
+                log.LocationIdentifier = testFile.Configuration.Location.LocationIdentifier;
 
             _output.WriteLine($"Configuration: {testFile.Configuration}");
             _output.WriteLine($"Input: {testFile.Input.Count}");
@@ -311,7 +316,16 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.WorkflowSteps
             _output.WriteLine($"expected: {expected.Count}");
             _output.WriteLine($"actual: {actual.Count}");
 
-            Assert.Equivalent(expected, actual);
+            Assert.Equal(expected.Count, actual.Count);
+            foreach (var pair in expected.Zip(actual))
+            {
+                Assert.Equal(pair.First.LocationIdentifier, pair.Second.LocationIdentifier);
+                Assert.Equal(pair.First.PhaseNumber, pair.Second.PhaseNumber);
+                Assert.Equal(pair.First.DetectorChannel, pair.Second.DetectorChannel);
+                Assert.Equal(pair.First.Direction, pair.Second.Direction);
+                // The fixture predates .NET's full-precision AddSeconds implementation.
+                Assert.InRange((pair.First.Timestamp - pair.Second.Timestamp).Duration(), TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+            }
         }
 
         public void Dispose()
