@@ -26,7 +26,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
     public class CalculateTransitSignalPriorityMaxTests
     {
         [Fact]
-        public void CalculateTransitSignalPriorityMax_Given_AllZeroPhaseValues_Should_SetRecommendedTSPMaxToNull()
+        public void CalculateTransitSignalPriorityMax_Given_AllZeroPhaseValues_Should_SetRecommendedTSPMaxToZero()
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 0, minTime: 0, percentile50th: 0, percentile85th: 0, percentSkips: 0, minGreen: 0, yellow: 0, redClearance: 0);
@@ -35,12 +35,12 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
 
             // Assert
-            Assert.Null(result.Item2[0].Phases[0].RecommendedTSPMax);
+            Assert.Equal(0, result.Item2[0].Phases[0].RecommendedTSPMax);
             Assert.Equal("Phase not in use", result.Item2[0].Phases[0].Notes);
         }
 
         [Fact]
-        public void CalculateTransitSignalPriorityMax_Given_ProgrammedSplitZero_Should_SetRecommendedTSPMaxToNull()
+        public void CalculateTransitSignalPriorityMax_Given_ProgrammedSplitZero_Should_SetRecommendedTSPMaxToZero()
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 0, minTime: 10);
@@ -49,7 +49,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
 
             // Assert
-            Assert.Null(result.Item2[0].Phases[0].RecommendedTSPMax);
+            Assert.Equal(0, result.Item2[0].Phases[0].RecommendedTSPMax);
             Assert.Equal("Programmed split is zero, manually calculate", result.Item2[0].Phases[0].Notes);
         }
 
@@ -58,6 +58,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 50, minTime: 20, percentSkips: 75);
+            input.Item2[0].Phases[0].IsSkipsGreaterThan70TSPMax = true;
 
             // Act
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
@@ -73,6 +74,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 50, minTime: 20, percentile50th: 30, percentMaxOutsForceOffs: 30);
+            input.Item2[0].Phases[0].IsForceOffsLessThan40TSPMax = true;
 
             // Act
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
@@ -88,6 +90,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 50, minTime: 20, percentile50th: 30, percentMaxOutsForceOffs: 50);
+            input.Item2[0].Phases[0].IsForceOffsLessThan60TSPMax = true;
 
             // Act
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
@@ -103,6 +106,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 50, minTime: 20, percentile50th: 30, percentMaxOutsForceOffs: 70, percentile85th: 30);
+            input.Item2[0].Phases[0].IsForceOffsLessThan80TSPMax = true;
 
             // Act
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
@@ -124,24 +128,35 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
 
             // Assert
             var phase = result.Item2[0].Phases[0];
-            Assert.Equal(null, phase.RecommendedTSPMax);
+            Assert.Equal(0, phase.RecommendedTSPMax);
             Assert.Equal("No recommended TSP Max", phase.Notes);
         }
 
 
 
         [Fact]
-        public void Given_NegativeRecommendedTSPMax_Should_SetToNull()
+        public void Given_NegativeRecommendedTSPMax_Should_SetToZero()
         {
             // Arrange
             var input = CreateTestInput(programmedSplit: 10, minTime: 20);
+            input.Item2[0].Phases[0].IsForceOffsLessThan40TSPMax = true;
 
             // Act
             var result = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input);
 
             // Assert
             var phase = result.Item2[0].Phases[0];
-            Assert.Null(phase.RecommendedTSPMax);
+            Assert.Equal(0, phase.RecommendedTSPMax);
+            Assert.Equal("No recommended TSP Max", phase.Notes);
+        }
+
+        [Fact]
+        public void RecommendationRequiresPreclassifiedEligibilityRatherThanRawPlanPercentages()
+        {
+            // Eligibility is classified over all plans before this calculation stage.
+            var input = CreateTestInput(percentSkips: 75, percentMaxOutsForceOffs: 10);
+            var phase = TransitSignalPriorityService.CalculateTransitSignalPriorityMax(input).Item2[0].Phases[0];
+            Assert.Equal(0, phase.RecommendedTSPMax);
             Assert.Equal("No recommended TSP Max", phase.Notes);
         }
 
@@ -202,8 +217,8 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             // Add additional non-designated phases with TSP Max values
             input.Item2[0].Phases.AddRange(new List<TransitSignalPhase>
         {
-            new TransitSignalPhase { PhaseNumber = 2, RecommendedTSPMax = 5 },
-            new TransitSignalPhase { PhaseNumber = 3, RecommendedTSPMax = 7 }
+            new TransitSignalPhase { PhaseNumber = 2, ProgrammedSplit = 20, MinTime = 5, RecommendedTSPMax = 5 },
+            new TransitSignalPhase { PhaseNumber = 3, ProgrammedSplit = 20, MinTime = 5, RecommendedTSPMax = 7 }
         });
 
             // Act
@@ -214,7 +229,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             Assert.Equal(10, phase.MaxReduction);
             Assert.Equal(12, phase.MaxExtension); // Sum of 5 and 7
             Assert.Equal(30, phase.PriorityMin); // ProgrammedSplit - RecommendedTSPMax (40 - 10)
-            Assert.Equal(50, phase.PriorityMax); // ProgrammedSplit + RecommendedTSPMax (40 + 10)
+            Assert.Equal(52, phase.PriorityMax); // Programmed split plus the available 12-second extension.
         }
 
         [Fact]
@@ -234,7 +249,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             Assert.Equal(10, phase.MaxReduction);
             Assert.Equal(0, phase.MaxExtension); // Not a designated phase, so should be 0
             Assert.Equal(30, phase.PriorityMin);
-            Assert.Equal(50, phase.PriorityMax);
+            Assert.Equal(40, phase.PriorityMax); // No extension on a non-designated phase.
         }
 
         [Fact]
@@ -254,7 +269,7 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             Assert.Equal(12, phase.MaxReduction);
             Assert.Equal(0, phase.MaxExtension); // No designated phases should result in 0 MaxExtension
             Assert.Equal(38, phase.PriorityMin); // ProgrammedSplit - RecommendedTSPMax
-            Assert.Equal(62, phase.PriorityMax); // ProgrammedSplit + RecommendedTSPMax
+            Assert.Equal(50, phase.PriorityMax); // No designated phase means no extension.
         }
 
         [Fact]
@@ -274,6 +289,48 @@ namespace Utah.Udot.Atspm.Business.TransitSignalPriorityRequest.Tests
             Assert.Equal(0, phase.PriorityMin);
             Assert.Equal(0, phase.PriorityMax);
             Assert.Equal(0, phase.MaxExtension);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void InactiveOrInvalidDesignatedPhaseKeepsZeroLimitsEvenWhenOtherPhasesOfferReduction(bool inactive)
+        {
+            var input = inactive
+                ? CreateTestInput(programmedSplit: 0, minTime: 0, percentile50th: 0, percentile85th: 0,
+                    minGreen: 0, yellow: 0, redClearance: 0, designatedPhases: new List<int> { 1 })
+                : CreateTestInput(programmedSplit: 30, recommendedTSPMax: -5, designatedPhases: new List<int> { 1 });
+            input.Item2[0].Phases.Add(new TransitSignalPhase
+            {
+                PhaseNumber = 2, ProgrammedSplit = 20, MinTime = 5, RecommendedTSPMax = 5
+            });
+            var phase = TransitSignalPriorityService.CalculateMaxExtension(input).Item2[0].Phases[0];
+            Assert.Equal(0, phase.MaxReduction);
+            Assert.Equal(0, phase.MaxExtension);
+            Assert.Equal(0, phase.PriorityMin);
+            Assert.Equal(0, phase.PriorityMax);
+        }
+
+        [Theory]
+        [InlineData(1, 5, 2, 6)]
+        [InlineData(9, 13, 10, 14)]
+        public void MatchingDesignatedPhasesUseTheLowerAvailableRingReduction(int designated, int matching, int donor, int matchingDonor)
+        {
+            var input = CreateTestInput(programmedSplit: 40, recommendedTSPMax: 10, phaseNumber: designated,
+                designatedPhases: new List<int> { designated, matching });
+            input.Item2[0].Phases.AddRange(new[]
+            {
+                new TransitSignalPhase { PhaseNumber = matching, ProgrammedSplit = 40, MinTime = 10, RecommendedTSPMax = 10 },
+                new TransitSignalPhase { PhaseNumber = donor, ProgrammedSplit = 20, MinTime = 5, RecommendedTSPMax = 12 },
+                new TransitSignalPhase { PhaseNumber = matchingDonor, ProgrammedSplit = 20, MinTime = 5, RecommendedTSPMax = 8 }
+            });
+            var phases = TransitSignalPriorityService.CalculateMaxExtension(input).Item2[0].Phases;
+            foreach (var phase in phases.Where(p => p.PhaseNumber == designated || p.PhaseNumber == matching))
+            {
+                Assert.Equal(8, phase.MaxExtension);
+                Assert.Equal(48, phase.PriorityMax);
+            }
+            Assert.All(phases.Where(p => p.PhaseNumber == donor || p.PhaseNumber == matchingDonor), p => Assert.Equal(0, p.MaxExtension));
         }
 
         private (TransitSignalLoadParameters, List<TransitSignalPriorityPlan>) CreateTestInput(
