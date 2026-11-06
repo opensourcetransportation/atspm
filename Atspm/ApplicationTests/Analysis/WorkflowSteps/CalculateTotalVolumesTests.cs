@@ -242,11 +242,11 @@ namespace Utah.Udot.Atspm.ApplicationTests.Analysis.WorkflowSteps
         }
 
         [Theory]
-        [InlineData(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\CalculateTotalVolumesTestData1.json")]
+        [InlineData("CalculateTotalVolumesTestData1.json")]
         [Trait(nameof(CalculateTotalVolumes), "From File")]
         public async void CalculateTotalVolumesFromFileTest(string file)
         {
-            var json = File.ReadAllText(new FileInfo(file).FullName);
+            var json = TestDataFiles.ReadAllText(file);
             var testFile = JsonConvert.DeserializeObject<CalculateTotalVolumeTestData>(json);
 
             _output.WriteLine($"Configuration: {testFile.Configuration}");

@@ -16,12 +16,14 @@
 #endregion
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Utah.Udot.Atspm.ApplicationTests.Analysis.TestObjects;
+using Utah.Udot.Atspm.ApplicationTests.Fixtures;
 using Utah.Udot.Atspm.Data.Interfaces;
 using Xunit.Sdk;
 
@@ -37,7 +39,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Attributes
         /// <inheritdoc/>
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            var dir = new DirectoryInfo(Path.Combine(Path.GetFullPath(@"..\..\..\"), "Analysis", "TestData"));
+            var dir = new DirectoryInfo(TestDataFiles.DirectoryPath);
             var hasFiles = false;
 
             if (dir.Exists)
@@ -46,10 +48,12 @@ namespace Utah.Udot.Atspm.ApplicationTests.Attributes
                 {
                     hasFiles = true;
                     var json = File.ReadAllText(f.FullName);
-                    var testFile = JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings()
+                    var fixture = JObject.Parse(json);
+                    fixture.Remove("$type"); // The declared test type is known; old fixture assembly names are not.
+                    var testFile = fixture.ToObject<T>(JsonSerializer.Create(new JsonSerializerSettings()
                     {
                         TypeNameHandling = TypeNameHandling.All,
-                    });
+                    }));
 
                     if (testFile.Configuration is ILocationLayer config)
                     {
@@ -114,7 +118,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Attributes
                 yield break;
             }
 
-            var dir = new DirectoryInfo(Path.Combine(Path.GetFullPath(@"..\..\..\"), "Analysis", "TestData"));
+            var dir = new DirectoryInfo(TestDataFiles.DirectoryPath);
             var hasFiles = false;
 
             if (dir.Exists)
@@ -123,10 +127,12 @@ namespace Utah.Udot.Atspm.ApplicationTests.Attributes
                 {
                     hasFiles = true;
                     var json = File.ReadAllText(f.FullName);
-                    var testFile = (AnalysisTestDataBase)JsonConvert.DeserializeObject(json, testDataType, new JsonSerializerSettings()
+                    var fixture = JObject.Parse(json);
+                    fixture.Remove("$type");
+                    var testFile = (AnalysisTestDataBase)fixture.ToObject(testDataType, JsonSerializer.Create(new JsonSerializerSettings()
                     {
                         TypeNameHandling = TypeNameHandling.All,
-                    });
+                    }));
 
                     if (testFile.Configuration is ILocationLayer config)
                     {
