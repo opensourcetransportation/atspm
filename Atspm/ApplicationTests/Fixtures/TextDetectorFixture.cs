@@ -26,7 +26,7 @@ namespace Utah.Udot.Atspm.ApplicationTests.Fixtures
     {
         public TextDetectorFixture()
         {
-            var json = File.ReadAllText(new FileInfo(@"C:\Users\christianbaker\source\repos\udot-atspm\Atspm\ApplicationCoreTests\Analysis\TestData\Detector63014TestData.json").FullName);
+            var json = TestDataFiles.ReadAllText("Detector63014TestData.json");
             TestDetector = JsonConvert.DeserializeObject<Detector>(json);
         }
 
