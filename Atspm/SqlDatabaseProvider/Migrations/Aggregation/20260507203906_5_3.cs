@@ -34,7 +34,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations.Aggregation
                     Start = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LocationIdentifier = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
                     PlanNumber = table.Column<short>(type: "smallint", nullable: false),
-                    Valid = table.Column<bool>(type: "bit", nullable: false, computedColumnSql: "[End] > [Start]"),
+                    Valid = table.Column<bool>(type: "bit", nullable: false, computedColumnSql: "CONVERT(bit, CASE WHEN [End] > [Start] THEN 1 ELSE 0 END)"),
                     End = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

@@ -90,7 +90,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations.Aggregation
                     b.Property<bool>("Valid")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bit")
-                        .HasComputedColumnSql("[End] > [Start]");
+                        .HasComputedColumnSql("CONVERT(bit, CASE WHEN [End] > [Start] THEN 1 ELSE 0 END)");
 
                     b.HasKey("LocationIdentifier", "PlanNumber", "Start");
 

@@ -37,7 +37,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ApiName = table.Column<string>(type: "varchar(32)", unicode: false, maxLength: 32, nullable: true),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TraceId = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     ConnectionId = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     RemoteIp = table.Column<string>(type: "varchar(45)", unicode: false, maxLength: 45, nullable: true),

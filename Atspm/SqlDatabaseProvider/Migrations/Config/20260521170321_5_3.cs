@@ -53,7 +53,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations
                 type: "datetimeoffset",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
+                oldType: "datetime2");
 
             migrationBuilder.AlterColumn<DateTimeOffset>(
                 name: "Modified",
@@ -1535,7 +1535,7 @@ namespace Utah.Udot.ATSPM.SqlDatabaseProvider.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "Timestamp",
                 table: "UsageEntries",
-                type: "timestamp with time zone",
+                type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTimeOffset),
                 oldType: "datetimeoffset");
